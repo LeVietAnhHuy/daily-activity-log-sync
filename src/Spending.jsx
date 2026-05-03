@@ -86,9 +86,9 @@ export default function Spending({ session }) {
         const uniqueMap = new Map();
 
         combined.forEach(l => {
-          // Normalize timestamp to seconds to handle precision differences
+          // Normalize timestamp to MINUTES to catch duplicates pushed seconds apart
           const d = new Date(l.timestamp);
-          const normalizedTime = Math.floor(d.getTime() / 1000); 
+          const normalizedTime = Math.floor(d.getTime() / (60 * 1000)); // Round to minute
           const contentKey = `${l.product_name}-${l.amount}-${normalizedTime}`;
           
           if (!uniqueMap.has(l.id) && !uniqueMap.has(contentKey)) {
