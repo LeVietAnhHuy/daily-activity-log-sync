@@ -1,0 +1,431 @@
+.spending-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
+
+/* ── Summary Dashboard ───────────────────────────── */
+.summary-dashboard {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.summary-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow, 0 2px 8px rgba(0,0,0,0.08));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--accent-glow);
+  border-color: var(--spiro);
+}
+
+.summary-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  background: linear-gradient(90deg, var(--title-grad-from, var(--spiro)) 0%, var(--title-grad-to, var(--gargoyle-gas)) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Additional Controls ─────────────────────────── */
+.spend-controls-row {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.date-toggle-group {
+  display: flex;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  align-items: center;
+}
+
+.date-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+.date-toggle-btn.active {
+  background-color: var(--spiro);
+  color: var(--cool-black);
+  font-weight: 700;
+}
+
+.date-override-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spend-currency-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--bg-color);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 30px 8px 12px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.spend-currency-select option {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+.spend-date-override-inline {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+  color-scheme: dark light;
+  width: 95px;
+  text-align: center;
+}
+
+.spend-currency-select:focus,
+.spend-date-override-inline:focus {
+  border-color: var(--spiro);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.time-input-container {
+  position: relative;
+}
+
+.time-input-popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 101;
+}
+
+.time-text-input {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  width: 100px;
+  text-align: center;
+}
+
+.time-text-input:focus {
+  border-color: var(--spiro);
+}
+
+.date-confirm-btn {
+  background-color: var(--spiro);
+  color: var(--cool-black);
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-confirm-btn:hover {
+  transform: scale(1.05);
+}
+
+/* ── React DatePicker Theme Overrides ────────────────── */
+.react-datepicker-wrapper {
+  display: inline-block;
+}
+
+.react-datepicker__input-container input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.react-datepicker {
+  background-color: var(--surface-color) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
+  font-family: inherit !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+.react-datepicker__header {
+  background-color: var(--surface-hover) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  border-top-left-radius: var(--radius-lg) !important;
+  border-top-right-radius: var(--radius-lg) !important;
+}
+
+.react-datepicker__current-month, 
+.react-datepicker-time__header, 
+.react-datepicker-year-header,
+.react-datepicker__day-name {
+  color: var(--text-primary) !important;
+}
+
+.react-datepicker__day {
+  color: var(--text-primary) !important;
+}
+
+.react-datepicker__day:hover, 
+.react-datepicker__month-text:hover, 
+.react-datepicker__quarter-text:hover, 
+.react-datepicker__year-text:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+.react-datepicker__day--selected, 
+.react-datepicker__day--in-selecting-range, 
+.react-datepicker__day--in-range, 
+.react-datepicker__month-text--selected, 
+.react-datepicker__month-text--in-selecting-range, 
+.react-datepicker__month-text--in-range, 
+.react-datepicker__quarter-text--selected, 
+.react-datepicker__quarter-text--in-selecting-range, 
+.react-datepicker__quarter-text--in-range, 
+.react-datepicker__year-text--selected, 
+.react-datepicker__year-text--in-selecting-range, 
+.react-datepicker__year-text--in-range {
+  background-color: var(--spiro) !important;
+  color: var(--cool-black) !important;
+  font-weight: bold;
+}
+
+.react-datepicker__time-container {
+  border-left: 1px solid var(--border-color) !important;
+}
+
+.react-datepicker__time {
+  background-color: var(--surface-color) !important;
+}
+
+.react-datepicker__time-list-item {
+  color: var(--text-primary) !important;
+}
+
+.react-datepicker__time-list-item:hover {
+  background-color: var(--surface-hover) !important;
+}
+
+.react-datepicker__time-list-item--selected {
+  background-color: var(--spiro) !important;
+  color: var(--cool-black) !important;
+  font-weight: bold !important;
+}
+
+/* ── Input Form ──────────────────────────────────── */
+.spend-input-form {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.spend-input {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 16px;
+  font-family: inherit;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.spend-input:focus {
+  border-color: var(--spiro);
+  box-shadow: 0 0 0 4px var(--accent-glow);
+  background-color: var(--surface-hover);
+}
+
+.spend-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.spend-amount {
+  flex: 1;
+  max-width: 250px;
+}
+
+.spend-product {
+  flex: 2;
+}
+
+.spend-submit-btn {
+  background: var(--spiro);
+  color: var(--cool-black);
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 0 32px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.spend-submit-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.spend-submit-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── History List ────────────────────────────────── */
+.spend-history-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.spend-day-panel {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+.spend-day-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.spend-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--spiro);
+  letter-spacing: 1.5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.spend-day-total {
+  font-size: 12px;
+  color: var(--text-primary);
+  opacity: 0.9;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.spend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.spend-item:hover {
+  background-color: var(--surface-hover);
+  transform: translateX(4px);
+}
+
+.spend-item-time {
+  font-family: 'Inter', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-width: 60px;
+}
+
+.spend-item-name {
+  flex: 1;
+  max-width: 75%;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-left: 12px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.spend-item-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
