@@ -49,6 +49,10 @@ function App() {
         .subscribe();
     }
 
+    if (session && isTauri) {
+      handleSyncAll();
+    }
+
     const handleGlobalKeyDown = (e) => {
       if (
         activeTab === "log" &&
@@ -151,11 +155,11 @@ function App() {
         });
       }
 
-      alert("Đã đồng bộ toàn bộ dữ liệu cũ lên Cloud thành công!");
+      // alert("Đã đồng bộ toàn bộ dữ liệu cũ lên Cloud thành công!");
       fetchLogs();
     } catch (e) {
       console.error("Sync failed:", e);
-      alert("Đồng bộ thất bại, hãy thử lại!");
+      // alert("Đồng bộ thất bại, hãy thử lại!");
     }
   }
 
@@ -231,7 +235,6 @@ function App() {
               <div className="sync-status">
                 <span className="sync-dot"></span>
                 Cloud Sync Active
-                {isTauri && <button className="sync-now-btn" onClick={handleSyncAll}>Đồng bộ dữ liệu cũ ⬆️</button>}
               </div>
             )}
             <button className="logout-btn" onClick={() => supabase.auth.signOut()}>Sign Out</button>

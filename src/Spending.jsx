@@ -29,15 +29,23 @@ export default function Spending({ session }) {
 
   useEffect(() => {
     fetchData();
+    // Only focus once on initial mount
     if (amountRef.current) amountRef.current.focus();
+  }, []); // Run only once on mount
 
+  useEffect(() => {
     // --- REAL-TIME SYNC ---
     let spendChannel;
     if (session) {
       spendChannel = supabase
         .channel('spend_logs_realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'spend_logs' }, () => {
-          fetchData(); // Auto update list and aggregates
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'spend_logs' 
+        }, (payload) => {
+          // Only re-fetch if the change didn't come from this session's local UI to prevent loops
+          fetchData();
         })
         .subscribe();
     }
