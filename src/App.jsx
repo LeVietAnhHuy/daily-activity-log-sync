@@ -207,17 +207,23 @@ function App() {
 
   // Group logs by date
   const groupedLogs = logs.reduce((acc, log) => {
-    const dateStr = new Date(log.timestamp).toLocaleDateString(undefined, {
+    // Use YYYY-MM-DD for a stable grouping key, but display it nicely
+    const date = new Date(log.timestamp);
+    const dateKey = date.toISOString().split('T')[0];
+    const displayDate = date.toLocaleDateString("en-GB", {
       weekday: "long", month: "short", day: "numeric", year: "numeric"
     });
-    if (!acc[dateStr]) acc[dateStr] = [];
-    acc[dateStr].push(log);
+    
+    if (!acc[displayDate]) acc[displayDate] = [];
+    acc[displayDate].push(log);
     return acc;
   }, {});
 
   const formatTime = (iso) =>
-    new Date(iso).toLocaleTimeString(undefined, {
-      hour: "2-digit", minute: "2-digit", hour12: false,
+    new Date(iso).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
     });
 
   if (!session) {

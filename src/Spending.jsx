@@ -27,6 +27,8 @@ export default function Spending({ session }) {
   const [timeInput, setTimeInput] = useState("12:00");
   const [isEditingTime, setIsEditingTime] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     fetchData();
     // Only focus once on initial mount
@@ -56,6 +58,8 @@ export default function Spending({ session }) {
   }, [session]);
 
   const fetchData = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       let localLogs = [];
       let currentAggregates = { daily: 0, weekly: 0, monthly: 0 };
@@ -77,7 +81,6 @@ export default function Spending({ session }) {
       const combined = [...localLogs, ...cloudLogs];
       const seen = new Set();
       const unique = combined.filter(l => {
-        // Use a unique key for deduplication
         const key = `${l.product_name}-${l.amount}-${l.timestamp}`;
         if (seen.has(key)) return false;
         seen.add(key);
@@ -87,17 +90,32 @@ export default function Spending({ session }) {
       const sorted = unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       setHistory(sorted);
 
-      if (isTauri) {
-        setAggregates(currentAggregates);
-      } else {
-        // Recalculate aggregates for Web
-        const now = new Date();
-        const daily = sorted.filter(l => new Date(l.timestamp).toDateString() === now.toDateString())
-                            .reduce((s, l) => s + l.amount, 0);
-        setAggregates({ daily, weekly: daily, monthly: daily });
-      }
+      // --- IMPROVED TOTALS CALCULATION (Works for both PC and Web) ---
+      const now = new Date();
+      const todayStr = now.toDateString();
+      
+      const dailyTotal = sorted
+        .filter(l => new Date(l.timestamp).toDateString() === todayStr)
+        .reduce((sum, l) => sum + l.amount, 0);
+
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(now.getDate() - 7);
+      const weeklyTotal = sorted
+        .filter(l => new Date(l.timestamp) >= oneWeekAgo)
+        .reduce((sum, l) => sum + l.amount, 0);
+
+      const monthlyTotal = sorted
+        .filter(l => {
+          const d = new Date(l.timestamp);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        })
+        .reduce((sum, l) => sum + l.amount, 0);
+
+      setAggregates({ daily: dailyTotal, weekly: weeklyTotal, monthly: monthlyTotal });
     } catch (err) {
       console.error("Failed to fetch spending data", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -167,15 +185,19 @@ export default function Spending({ session }) {
     }
   };
 
-  const formatTime = (isoString) => {
-    const d = new Date(isoString);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+  const formatTime = (iso) =>
+    new Date(iso).toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   
-  const formatDate = (isoString) => {
-    const d = new Date(isoString);
-    return d.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
+  const formatDate = (iso) =>
+    new Date(iso).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    });
 
   const formatOverrideDate = (val) => {
     if (!val) return "Chọn ngày...";
