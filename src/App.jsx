@@ -78,22 +78,27 @@ function App() {
 
   async function fetchLogs() {
     try {
+      let allLogs = [];
+      // 1. Fetch from Local
       if (isTauri) {
-        const fetched = await invoke("get_logs");
-        setLogs(fetched);
+        allLogs = await invoke("get_logs");
       }
 
+      // 2. Fetch from Cloud
       if (session) {
         const { data: cloudLogs, error } = await supabase
           .from('activity_logs')
           .select('*')
           .order('timestamp', { ascending: false });
         
-        if (!error && cloudLogs && cloudLogs.length > 0) {
-          // Merge or prefer cloud logs (simplified)
-          setLogs(cloudLogs);
+        if (!error && cloudLogs) {
+          // Deduplicate by content + timestamp
+          const existing = new Set(allLogs.map(l => `${l.content}-${l.timestamp}`));
+          const uniqueCloud = cloudLogs.filter(l => !existing.has(`${l.content}-${l.timestamp}`));
+          allLogs = [...allLogs, ...uniqueCloud];
         }
       }
+      setLogs(allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
     } catch (e) {
       console.error("Failed to fetch logs:", e);
     }

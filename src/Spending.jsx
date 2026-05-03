@@ -49,15 +49,16 @@ export default function Spending({ session }) {
 
   const fetchData = async () => {
     try {
-      // 1. Fetch from Local (Only if on PC)
+      let allLogs = [];
+      let currentAggregates = { daily: 0, weekly: 0, monthly: 0 };
+
+      // 1. Fetch from Local
       if (isTauri) {
-        const agg = await invoke("get_spend_aggregates");
-        setAggregates(agg);
-        const logs = await invoke("get_spend_logs");
-        setHistory(logs);
+        currentAggregates = await invoke("get_spend_aggregates");
+        allLogs = await invoke("get_spend_logs");
       }
 
-      // 2. Fetch from Cloud (Always try if logged in)
+      // 2. Fetch from Cloud
       if (session) {
         const { data: cloudLogs, error } = await supabase
           .from('spend_logs')
@@ -65,17 +66,24 @@ export default function Spending({ session }) {
           .order('timestamp', { ascending: false });
         
         if (!error && cloudLogs) {
-          if (cloudLogs.length > 0) {
-            setHistory(cloudLogs);
-            // On Web, we calculate aggregates from cloud data
-            if (!isTauri) {
-              const now = new Date();
-              const daily = cloudLogs.filter(l => new Date(l.timestamp).toDateString() === now.toDateString())
-                                     .reduce((s, l) => s + l.amount, 0);
-              setAggregates({ daily, weekly: daily, monthly: daily }); // Simplified for web preview
-            }
-          }
+          // Deduplicate by name + amount + timestamp
+          const existing = new Set(allLogs.map(l => `${l.product_name}-${l.amount}-${l.timestamp}`));
+          const uniqueCloud = cloudLogs.filter(l => !existing.has(`${l.product_name}-${l.amount}-${l.timestamp}`));
+          allLogs = [...allLogs, ...uniqueCloud];
         }
+      }
+
+      const sorted = allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setHistory(sorted);
+
+      if (isTauri) {
+        setAggregates(currentAggregates);
+      } else {
+        // Recalculate aggregates for Web
+        const now = new Date();
+        const daily = sorted.filter(l => new Date(l.timestamp).toDateString() === now.toDateString())
+                            .reduce((s, l) => s + l.amount, 0);
+        setAggregates({ daily, weekly: daily, monthly: daily });
       }
     } catch (err) {
       console.error("Failed to fetch spending data", err);
