@@ -58,69 +58,56 @@ export default function Spending({ session }) {
   }, [session]);
 
   const fetchData = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
+    // 1. Fetch Local Data FIRST (Instant)
     try {
-      let localLogs = [];
-      let currentAggregates = { daily: 0, weekly: 0, monthly: 0 };
       if (isTauri) {
-        currentAggregates = await invoke("get_spend_aggregates");
-        localLogs = await invoke("get_spend_logs");
+        const localAgg = await invoke("get_spend_aggregates");
+        const localLogs = await invoke("get_spend_logs");
+        setAggregates(localAgg);
+        setHistory(localLogs);
       }
-
-      let cloudLogs = [];
-      if (session) {
-        const { data, error } = await supabase
-          .from('spend_logs')
-          .select('*')
-          .order('timestamp', { ascending: false });
-        if (!error && data) cloudLogs = data;
-      }
-
-      // --- ABSOLUTE DEDUPLICATION ---
-      const combined = [...localLogs, ...cloudLogs];
-      const uniqueMap = new Map();
-
-      combined.forEach(l => {
-        // Create a unique key that represents the actual transaction
-        const contentKey = `${l.product_name}-${l.amount}-${new Date(l.timestamp).getTime()}`;
-        
-        // Priority: If we already have this transaction (by ID or by content), don't add it again
-        if (!uniqueMap.has(l.id) && !uniqueMap.has(contentKey)) {
-          uniqueMap.set(l.id || contentKey, l);
-        }
-      });
-
-      const unique = Array.from(uniqueMap.values());
-      const sorted = unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-      setHistory(sorted);
-
-      // --- CALCULATE TOTALS FROM CLEAN DATA ---
-      const now = new Date();
-      const todayStr = now.toDateString();
-      
-      const dailyTotal = sorted
-        .filter(l => new Date(l.timestamp).toDateString() === todayStr)
-        .reduce((sum, l) => sum + l.amount, 0);
-
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(now.getDate() - 7);
-      const weeklyTotal = sorted
-        .filter(l => new Date(l.timestamp) >= oneWeekAgo)
-        .reduce((sum, l) => sum + l.amount, 0);
-
-      const monthlyTotal = sorted
-        .filter(l => {
-          const d = new Date(l.timestamp);
-          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-        })
-        .reduce((sum, l) => sum + l.amount, 0);
-
-      setAggregates({ daily: dailyTotal, weekly: weeklyTotal, monthly: monthlyTotal });
     } catch (err) {
-      console.error("Failed to fetch spending data", err);
-    } finally {
-      setIsLoading(false);
+      console.error("Local fetch failed", err);
+    }
+
+    // 2. Fetch Cloud Data in BACKGROUND
+    if (!session) return;
+    
+    try {
+      const { data: cloudLogs, error } = await supabase
+        .from('spend_logs')
+        .select('*')
+        .order('timestamp', { ascending: false });
+      
+      if (!error && cloudLogs) {
+        // Re-run deduplication with new cloud data
+        const currentLocal = isTauri ? await invoke("get_spend_logs") : [];
+        const combined = [...currentLocal, ...cloudLogs];
+        const uniqueMap = new Map();
+
+        combined.forEach(l => {
+          const contentKey = `${l.product_name}-${l.amount}-${new Date(l.timestamp).getTime()}`;
+          if (!uniqueMap.has(l.id) && !uniqueMap.has(contentKey)) {
+            uniqueMap.set(l.id || contentKey, l);
+          }
+        });
+
+        const unique = Array.from(uniqueMap.values());
+        const sorted = unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        // Update UI with merged data
+        setHistory(sorted);
+
+        // Recalculate totals
+        const now = new Date();
+        const dailyTotal = sorted
+          .filter(l => new Date(l.timestamp).toDateString() === now.toDateString())
+          .reduce((sum, l) => sum + l.amount, 0);
+        
+        setAggregates(prev => ({ ...prev, daily: dailyTotal }));
+      }
+    } catch (err) {
+      console.error("Cloud sync failed", err);
     }
   };
 
