@@ -86,23 +86,26 @@ export default function Spending({ session }) {
         const uniqueMap = new Map();
 
         combined.forEach(l => {
-          // Normalize timestamp to MINUTES to catch duplicates pushed seconds apart
+          // ULTRA-STRICT NORMALIZATION
+          const cleanName = (l.product_name || "").trim().toLowerCase();
+          const cleanAmount = Math.round(l.amount); // Round to avoid float issues
           const d = new Date(l.timestamp);
-          const normalizedTime = Math.floor(d.getTime() / (60 * 1000)); // Round to minute
-          const contentKey = `${l.product_name}-${l.amount}-${normalizedTime}`;
+          const cleanTime = Math.floor(d.getTime() / (60 * 1000)); // Precise to the minute
           
-          if (!uniqueMap.has(l.id) && !uniqueMap.has(contentKey)) {
-            uniqueMap.set(l.id || contentKey, l);
+          const contentKey = `${cleanName}-${cleanAmount}-${cleanTime}`;
+          const idKey = l.id;
+          
+          if (!uniqueMap.has(idKey) && !uniqueMap.has(contentKey)) {
+            uniqueMap.set(idKey || contentKey, l);
           }
         });
 
         const unique = Array.from(uniqueMap.values());
         const sorted = unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         
-        // Update UI with merged data
         setHistory(sorted);
 
-        // Recalculate totals
+        // Recalculate totals from CLEAN data
         const now = new Date();
         const dailyTotal = sorted
           .filter(l => new Date(l.timestamp).toDateString() === now.toDateString())
