@@ -86,7 +86,11 @@ export default function Spending({ session }) {
         const uniqueMap = new Map();
 
         combined.forEach(l => {
-          const contentKey = `${l.product_name}-${l.amount}-${new Date(l.timestamp).getTime()}`;
+          // Normalize timestamp to seconds to handle precision differences
+          const d = new Date(l.timestamp);
+          const normalizedTime = Math.floor(d.getTime() / 1000); 
+          const contentKey = `${l.product_name}-${l.amount}-${normalizedTime}`;
+          
           if (!uniqueMap.has(l.id) && !uniqueMap.has(contentKey)) {
             uniqueMap.set(l.id || contentKey, l);
           }

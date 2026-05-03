@@ -133,33 +133,41 @@ function App() {
   async function handleSyncAll() {
     if (!session || !isTauri) return;
     try {
-      // 1. Sync Activity Logs
+      // 1. Fetch Cloud Data first to see what's already there
+      const { data: cloudActivity } = await supabase.from('activity_logs').select('content, timestamp');
+      const { data: cloudSpend } = await supabase.from('spend_logs').select('product_name, amount, timestamp');
+      
+      const activitySet = new Set(cloudActivity?.map(a => `${a.content}-${a.timestamp}`));
+      const spendSet = new Set(cloudSpend?.map(s => `${s.product_name}-${s.amount}-${s.timestamp}`));
+
+      // 2. Sync Activity Logs (Only new ones)
       const localLogs = await invoke("get_logs");
       for (const log of localLogs) {
-        await supabase.from('activity_logs').insert({
-          user_id: session.user.id,
-          content: log.content,
-          timestamp: log.timestamp,
-          is_starred: log.is_starred || false
-        });
+        if (!activitySet.has(`${log.content}-${log.timestamp}`)) {
+          await supabase.from('activity_logs').insert({
+            user_id: session.user.id,
+            content: log.content,
+            timestamp: log.timestamp,
+            is_starred: log.is_starred || false
+          });
+        }
       }
 
-      // 2. Sync Spending Logs
+      // 3. Sync Spending Logs (Only new ones)
       const localSpend = await invoke("get_spend_logs");
       for (const s of localSpend) {
-        await supabase.from('spend_logs').insert({
-          user_id: session.user.id,
-          amount: s.amount,
-          product_name: s.product_name,
-          timestamp: s.timestamp
-        });
+        if (!spendSet.has(`${s.product_name}-${s.amount}-${s.timestamp}`)) {
+          await supabase.from('spend_logs').insert({
+            user_id: session.user.id,
+            amount: s.amount,
+            product_name: s.product_name,
+            timestamp: s.timestamp
+          });
+        }
       }
-
-      // alert("Đã đồng bộ toàn bộ dữ liệu cũ lên Cloud thành công!");
       fetchLogs();
     } catch (e) {
-      console.error("Sync failed:", e);
-      // alert("Đồng bộ thất bại, hãy thử lại!");
+      console.error("Silent sync failed:", e);
     }
   }
 
