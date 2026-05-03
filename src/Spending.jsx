@@ -49,7 +49,7 @@ export default function Spending({ session }) {
 
   const fetchData = async () => {
     try {
-      // 1. Fetch from Local
+      // 1. Fetch from Local (Only if on PC)
       if (isTauri) {
         const agg = await invoke("get_spend_aggregates");
         setAggregates(agg);
@@ -57,7 +57,7 @@ export default function Spending({ session }) {
         setHistory(logs);
       }
 
-      // 2. Sync from Cloud if logged in
+      // 2. Fetch from Cloud (Always try if logged in)
       if (session) {
         const { data: cloudLogs, error } = await supabase
           .from('spend_logs')
@@ -65,12 +65,15 @@ export default function Spending({ session }) {
           .order('timestamp', { ascending: false });
         
         if (!error && cloudLogs) {
-          // In a real expert app, we'd merge and handle conflicts
-          // For now, let's just show cloud logs if they exist
           if (cloudLogs.length > 0) {
             setHistory(cloudLogs);
-            // Re-calculate aggregates locally from cloud data
-            // (Simple version for demo)
+            // On Web, we calculate aggregates from cloud data
+            if (!isTauri) {
+              const now = new Date();
+              const daily = cloudLogs.filter(l => new Date(l.timestamp).toDateString() === now.toDateString())
+                                     .reduce((s, l) => s + l.amount, 0);
+              setAggregates({ daily, weekly: daily, monthly: daily }); // Simplified for web preview
+            }
           }
         }
       }
