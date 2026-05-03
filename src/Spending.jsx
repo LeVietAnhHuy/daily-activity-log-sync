@@ -49,31 +49,34 @@ export default function Spending({ session }) {
 
   const fetchData = async () => {
     try {
-      let allLogs = [];
+      let localLogs = [];
       let currentAggregates = { daily: 0, weekly: 0, monthly: 0 };
-
-      // 1. Fetch from Local
       if (isTauri) {
         currentAggregates = await invoke("get_spend_aggregates");
-        allLogs = await invoke("get_spend_logs");
+        localLogs = await invoke("get_spend_logs");
       }
 
-      // 2. Fetch from Cloud
+      let cloudLogs = [];
       if (session) {
-        const { data: cloudLogs, error } = await supabase
+        const { data, error } = await supabase
           .from('spend_logs')
           .select('*')
           .order('timestamp', { ascending: false });
-        
-        if (!error && cloudLogs) {
-          // Deduplicate by name + amount + timestamp
-          const existing = new Set(allLogs.map(l => `${l.product_name}-${l.amount}-${l.timestamp}`));
-          const uniqueCloud = cloudLogs.filter(l => !existing.has(`${l.product_name}-${l.amount}-${l.timestamp}`));
-          allLogs = [...allLogs, ...uniqueCloud];
-        }
+        if (!error && data) cloudLogs = data;
       }
 
-      const sorted = allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      // Robust Deduplication for the entire merged list
+      const combined = [...localLogs, ...cloudLogs];
+      const seen = new Set();
+      const unique = combined.filter(l => {
+        // Use a unique key for deduplication
+        const key = `${l.product_name}-${l.amount}-${l.timestamp}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      const sorted = unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       setHistory(sorted);
 
       if (isTauri) {

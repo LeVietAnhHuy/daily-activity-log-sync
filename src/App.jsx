@@ -78,27 +78,29 @@ function App() {
 
   async function fetchLogs() {
     try {
-      let allLogs = [];
-      // 1. Fetch from Local
-      if (isTauri) {
-        allLogs = await invoke("get_logs");
-      }
+      let localLogs = [];
+      if (isTauri) localLogs = await invoke("get_logs");
 
-      // 2. Fetch from Cloud
+      let cloudLogs = [];
       if (session) {
-        const { data: cloudLogs, error } = await supabase
+        const { data, error } = await supabase
           .from('activity_logs')
           .select('*')
           .order('timestamp', { ascending: false });
-        
-        if (!error && cloudLogs) {
-          // Deduplicate by content + timestamp
-          const existing = new Set(allLogs.map(l => `${l.content}-${l.timestamp}`));
-          const uniqueCloud = cloudLogs.filter(l => !existing.has(`${l.content}-${l.timestamp}`));
-          allLogs = [...allLogs, ...uniqueCloud];
-        }
+        if (!error && data) cloudLogs = data;
       }
-      setLogs(allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+
+      // Robust Deduplication for the entire merged list
+      const combined = [...localLogs, ...cloudLogs];
+      const seen = new Set();
+      const unique = combined.filter(log => {
+        const key = `${log.content}-${log.timestamp}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setLogs(unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
     } catch (e) {
       console.error("Failed to fetch logs:", e);
     }
@@ -112,6 +114,8 @@ function App() {
       console.error("Failed to fetch logs for date:", e);
     }
   }
+
+
 
   async function fetchTaskCounts() {
     try {
