@@ -38,6 +38,17 @@ function App() {
       setSession(session);
     });
 
+    // --- REAL-TIME SYNC ---
+    let logChannel;
+    if (session) {
+      logChannel = supabase
+        .channel('activity_logs_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'activity_logs' }, () => {
+          fetchLogs(); // Auto re-fetch when anything changes in DB
+        })
+        .subscribe();
+    }
+
     const handleGlobalKeyDown = (e) => {
       if (
         activeTab === "log" &&
@@ -52,8 +63,9 @@ function App() {
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
       subscription.unsubscribe();
+      if (logChannel) supabase.removeChannel(logChannel);
     };
-  }, [activeTab]);
+  }, [activeTab, session]);
 
   // When selectedDate changes, fetch logs for that date
   useEffect(() => {
@@ -102,6 +114,39 @@ function App() {
       setTaskCounts(counts);
     } catch (e) {
       console.error("Failed to fetch task counts:", e);
+    }
+  }
+
+  async function handleSyncAll() {
+    if (!session || !isTauri) return;
+    try {
+      // 1. Sync Activity Logs
+      const localLogs = await invoke("get_logs");
+      for (const log of localLogs) {
+        await supabase.from('activity_logs').insert({
+          user_id: session.user.id,
+          content: log.content,
+          timestamp: log.timestamp,
+          is_starred: log.is_starred || false
+        });
+      }
+
+      // 2. Sync Spending Logs
+      const localSpend = await invoke("get_spend_logs");
+      for (const s of localSpend) {
+        await supabase.from('spend_logs').insert({
+          user_id: session.user.id,
+          amount: s.amount,
+          product_name: s.product_name,
+          timestamp: s.timestamp
+        });
+      }
+
+      alert("Đã đồng bộ toàn bộ dữ liệu cũ lên Cloud thành công!");
+      fetchLogs();
+    } catch (e) {
+      console.error("Sync failed:", e);
+      alert("Đồng bộ thất bại, hãy thử lại!");
     }
   }
 
@@ -177,6 +222,7 @@ function App() {
               <div className="sync-status">
                 <span className="sync-dot"></span>
                 Cloud Sync Active
+                {isTauri && <button className="sync-now-btn" onClick={handleSyncAll}>Đồng bộ dữ liệu cũ ⬆️</button>}
               </div>
             )}
             <button className="logout-btn" onClick={() => supabase.auth.signOut()}>Sign Out</button>

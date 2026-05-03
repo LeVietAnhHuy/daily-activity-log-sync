@@ -217,13 +217,30 @@ body {
 .sync-status {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   font-size: 11px;
   color: var(--text-secondary);
   background: var(--surface-hover);
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
   border: 1px solid var(--border-color);
+}
+
+.sync-now-btn {
+  background: var(--spiro);
+  color: var(--cool-black);
+  border: none;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: opacity 0.2s;
+}
+
+.sync-now-btn:hover {
+  opacity: 0.8;
 }
 
 .sync-dot {

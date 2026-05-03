@@ -30,7 +30,22 @@ export default function Spending({ session }) {
   useEffect(() => {
     fetchData();
     if (amountRef.current) amountRef.current.focus();
-  }, []);
+
+    // --- REAL-TIME SYNC ---
+    let spendChannel;
+    if (session) {
+      spendChannel = supabase
+        .channel('spend_logs_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'spend_logs' }, () => {
+          fetchData(); // Auto update list and aggregates
+        })
+        .subscribe();
+    }
+
+    return () => {
+      if (spendChannel) supabase.removeChannel(spendChannel);
+    };
+  }, [session]);
 
   const fetchData = async () => {
     try {
