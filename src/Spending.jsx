@@ -77,20 +77,25 @@ export default function Spending({ session }) {
         if (!error && data) cloudLogs = data;
       }
 
-      // Robust Deduplication for the entire merged list
+      // --- ABSOLUTE DEDUPLICATION ---
       const combined = [...localLogs, ...cloudLogs];
-      const seen = new Set();
-      const unique = combined.filter(l => {
-        const key = `${l.product_name}-${l.amount}-${l.timestamp}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+      const uniqueMap = new Map();
+
+      combined.forEach(l => {
+        // Create a unique key that represents the actual transaction
+        const contentKey = `${l.product_name}-${l.amount}-${new Date(l.timestamp).getTime()}`;
+        
+        // Priority: If we already have this transaction (by ID or by content), don't add it again
+        if (!uniqueMap.has(l.id) && !uniqueMap.has(contentKey)) {
+          uniqueMap.set(l.id || contentKey, l);
+        }
       });
 
+      const unique = Array.from(uniqueMap.values());
       const sorted = unique.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       setHistory(sorted);
 
-      // --- IMPROVED TOTALS CALCULATION (Works for both PC and Web) ---
+      // --- CALCULATE TOTALS FROM CLEAN DATA ---
       const now = new Date();
       const todayStr = now.toDateString();
       
