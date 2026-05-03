@@ -1,5 +1,7 @@
+import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { supabase } from "./supabase";
+import { isTauri } from "./platform";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./Spending.css";
@@ -33,10 +35,12 @@ export default function Spending({ session }) {
   const fetchData = async () => {
     try {
       // 1. Fetch from Local
-      const agg = await invoke("get_spend_aggregates");
-      setAggregates(agg);
-      const logs = await invoke("get_spend_logs");
-      setHistory(logs);
+      if (isTauri) {
+        const agg = await invoke("get_spend_aggregates");
+        setAggregates(agg);
+        const logs = await invoke("get_spend_logs");
+        setHistory(logs);
+      }
 
       // 2. Sync from Cloud if logged in
       if (session) {
@@ -80,7 +84,9 @@ export default function Spending({ session }) {
       const amountInBase = parsedAmount * (exchangeRates[currency] || 1);
       
       // Save Local
-      await invoke("add_spend_log", { amount: amountInBase, productName, timestampOverride: timestamp_override });
+      if (isTauri) {
+        await invoke("add_spend_log", { amount: amountInBase, productName, timestampOverride: timestamp_override });
+      }
 
       // Save Cloud
       if (session) {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { supabase } from "./supabase";
+import { isTauri } from "./platform";
 import Auth from "./Auth";
 import Calendar from "./Calendar";
 import Spending from "./Spending";
@@ -21,8 +22,10 @@ function App() {
   useEffect(() => {
     // Apply persisted theme on first load
     applyTheme(getStoredTheme());
-    fetchLogs();
-    fetchTaskCounts();
+    if (isTauri) {
+      fetchLogs();
+      fetchTaskCounts();
+    }
     if (inputRef.current) inputRef.current.focus();
 
     // Check current session
@@ -63,8 +66,10 @@ function App() {
 
   async function fetchLogs() {
     try {
-      const fetched = await invoke("get_logs");
-      setLogs(fetched);
+      if (isTauri) {
+        const fetched = await invoke("get_logs");
+        setLogs(fetched);
+      }
 
       if (session) {
         const { data: cloudLogs, error } = await supabase
@@ -114,7 +119,9 @@ function App() {
     if (e.key === "Enter" && inputValue.trim()) {
       e.preventDefault();
       try {
-        await invoke("add_log", { content: inputValue.trim(), duration: null, tags: null });
+        if (isTauri) {
+          await invoke("add_log", { content: inputValue.trim(), duration: null, tags: null });
+        }
         
         if (session) {
           await supabase.from('activity_logs').insert({
@@ -128,7 +135,7 @@ function App() {
         setInputValue("");
         if (selectedDate) fetchLogsForDate(selectedDate);
         else fetchLogs();
-        fetchTaskCounts();
+        if (isTauri) fetchTaskCounts();
       } catch (e) {
         console.error("Failed to add log:", e);
       }
@@ -273,7 +280,7 @@ function App() {
       )}
       
       {activeTab === "spending" && (
-        <Spending />
+        <Spending session={session} />
       )}
     </div>
   );
