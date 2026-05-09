@@ -11,7 +11,7 @@ export const CURRENCY_LOCALE_MAP = {
   KRW: { locale: "ko-KR", suggestedLanguage: "ko" },
   USD: { locale: "en-US", suggestedLanguage: "en" },
   EUR: { locale: "en-GB", suggestedLanguage: "en" },
-  JPY: { locale: "ja-JP", suggestedLanguage: "en" },
+  JPY: { locale: "ja-JP", suggestedLanguage: "ja" },
   CNY: { locale: "zh-CN", suggestedLanguage: "en" },
   GBP: { locale: "en-GB", suggestedLanguage: "en" },
 };
@@ -36,6 +36,8 @@ export function getAppLocale(settings) {
         return "vi-VN";
       case "ko":
         return "ko-KR";
+      case "ja":
+        return "ja-JP";
       default:
         return "en-US";
     }
