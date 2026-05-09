@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./Spending.css";
 import HelpButton from "./HelpButton";
 import { HELP_TEXT } from "./spendingHelpText";
+import { useTranslation } from "./i18n";
 import {
   DEFAULT_CATEGORIES,
   PAYMENT_METHODS,
@@ -18,6 +19,7 @@ import {
   createTransactionFromRecurringPayment,
   filterSpendLogs,
   formatCurrency as formatBaseCurrency,
+  getAppLocale,
   getLocalDateKey,
   getMonthlyProjectedSpending,
   getNoSpendMonthCalendar,
@@ -61,34 +63,6 @@ const DUE_STATUS_LABELS = {
 };
 
 const RECURRING_GROUP_ORDER = ["overdue", "today", "soon", "later", "paused", "ended"];
-
-const defaultAppSettings = {
-  defaultCurrency: "VND",
-  displayCurrency: "VND",
-  locale: "en-US",
-  // Language settings (Phase 1)
-  appLanguage: "en",
-  formatLocaleMode: "currency",
-  autoMatchLanguageToCurrency: false,
-  // End language settings
-  transactionDensity: "comfortable",
-  theme: "default-dark",
-  backgroundEffects: "on",
-  themeIntensity: "medium",
-  backgroundMotion: "on",
-  autoReduceMotionInFullscreen: true,
-  showHelpButtons: true,
-  noSpendSettings: {
-    countTodayInCurrentStreakPreview: true,
-    excludeIncomeFromSpending: true,
-    startTrackingFromFirstTransaction: true,
-  },
-  recurringPayments: {
-    defaultReminderDaysBefore: 3,
-    showOverdueFirst: true,
-    showDashboardReminders: true,
-  },
-};
 
 function loadAppSettings() {
   try {
@@ -566,291 +540,7 @@ function InlineTransactionEditor({
   );
 }
 
-function SettingsPanel({
-  settings,
-  onChange,
-  onNoSpendChange,
-  onRecurringChange,
-  onClose,
-}) {
-  return (
-    <section className="spend-settings-panel" aria-label="Spending preferences">
-      <div className="spend-settings-header">
-        <div>
-          <span className="spend-section-kicker">Preferences</span>
-          <h2>Settings</h2>
-        </div>
-        <button type="button" className="secondary-action-btn" onClick={onClose}>
-          Close
-        </button>
-      </div>
-
-      {/* Appearance Section */}
-      <div className="spend-settings-section">
-        <h3 className="spend-settings-section-title">Appearance</h3>
-        <div className="spend-settings-grid">
-          <label className="spend-field">
-            <span>Theme</span>
-            <select
-              value={settings.theme}
-              onChange={(event) => onChange("theme", event.target.value)}
-            >
-              <option value="default-dark">Default Dark</option>
-              <option value="anime-dark">Anime Dark Fantasy</option>
-            </select>
-          </label>
-
-          <label className="spend-field">
-            <span>Background Effects</span>
-            <select
-              value={settings.backgroundEffects || settings.backgroundMotion}
-              onChange={(event) => onChange("backgroundEffects", event.target.value)}
-            >
-              <option value="on">On</option>
-              <option value="reduced">Reduced</option>
-              <option value="off">Off</option>
-            </select>
-          </label>
-
-          <label className="spend-field">
-            <span>Theme Intensity</span>
-            <select
-              value={settings.themeIntensity}
-              onChange={(event) => onChange("themeIntensity", event.target.value)}
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </label>
-
-          <label className="spend-field">
-            <span>Transaction View</span>
-            <select
-              value={settings.transactionDensity}
-              onChange={(event) =>
-                onChange("transactionDensity", event.target.value)
-              }
-            >
-              <option value="comfortable">Comfortable</option>
-              <option value="compact">Compact</option>
-            </select>
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.autoReduceMotionInFullscreen !== false}
-              onChange={(event) =>
-                onChange("autoReduceMotionInFullscreen", event.target.checked)
-              }
-            />
-            <span>Auto reduce motion in fullscreen</span>
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.showHelpButtons}
-              onChange={(event) => onChange("showHelpButtons", event.target.checked)}
-            />
-            <span>Show help buttons</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Language Section */}
-      <div className="spend-settings-section">
-        <h3 className="spend-settings-section-title">Language</h3>
-        <div className="spend-settings-grid">
-          <label className="spend-field">
-            <span>App Language</span>
-            <select
-              value={settings.appLanguage}
-              onChange={(event) => onChange("appLanguage", event.target.value)}
-            >
-              <option value="en">English</option>
-              <option value="vi">Tiếng Việt</option>
-              <option value="ko">한국어</option>
-            </select>
-          </label>
-
-          <label className="spend-field">
-            <span>Date / Number Format</span>
-            <select
-              value={settings.formatLocaleMode}
-              onChange={(event) => onChange("formatLocaleMode", event.target.value)}
-            >
-              <option value="language">Follow App Language</option>
-              <option value="currency">Follow Display Currency</option>
-            </select>
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.autoMatchLanguageToCurrency}
-              onChange={(event) => {
-                const newValue = event.target.checked;
-                onChange("autoMatchLanguageToCurrency", newValue);
-                // If enabling auto-match, also update language to match current currency
-                if (newValue) {
-                  const currency = settings.displayCurrency || "VND";
-                  const localeMap = {
-                    VND: "vi",
-                    KRW: "ko",
-                    USD: "en",
-                    EUR: "en",
-                    JPY: "en",
-                    CNY: "en",
-                    GBP: "en",
-                  };
-                  const suggestedLang = localeMap[currency] || "en";
-                  onChange("appLanguage", suggestedLang);
-                }
-              }}
-            />
-            <span>Auto-match language to display currency</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Currency Section */}
-      <div className="spend-settings-section">
-        <h3 className="spend-settings-section-title">Currency</h3>
-        <div className="spend-settings-grid">
-          <label className="spend-field">
-            <span>Default Currency</span>
-            <select
-              value={settings.defaultCurrency}
-              onChange={(event) => onChange("defaultCurrency", event.target.value)}
-            >
-              {CURRENCY_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="spend-field">
-            <span>Display Currency</span>
-            <select
-              value={settings.displayCurrency}
-              onChange={(event) => {
-                const newCurrency = event.target.value;
-                onChange("displayCurrency", newCurrency);
-                // Auto-match language if enabled
-                if (settings.autoMatchLanguageToCurrency) {
-                  const localeMap = {
-                    VND: "vi",
-                    KRW: "ko",
-                    USD: "en",
-                    EUR: "en",
-                    JPY: "en",
-                    CNY: "en",
-                    GBP: "en",
-                  };
-                  const suggestedLang = localeMap[newCurrency] || "en";
-                  onChange("appLanguage", suggestedLang);
-                }
-              }}
-            >
-              {CURRENCY_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      </div>
-
-      {/* No-Spend Settings Section */}
-      <div className="spend-settings-section">
-        <h3 className="spend-settings-section-title">No-Spend Tracker</h3>
-        <div className="spend-settings-grid">
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.noSpendSettings.countTodayInCurrentStreakPreview}
-              onChange={(event) =>
-                onNoSpendChange("countTodayInCurrentStreakPreview", event.target.checked)
-              }
-            />
-            <span>Preview today in no-spend status</span>
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.noSpendSettings.excludeIncomeFromSpending}
-              onChange={(event) =>
-                onNoSpendChange("excludeIncomeFromSpending", event.target.checked)
-              }
-            />
-            <span>Income does not break streak</span>
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.noSpendSettings.startTrackingFromFirstTransaction}
-              onChange={(event) =>
-                onNoSpendChange("startTrackingFromFirstTransaction", event.target.checked)
-              }
-            />
-            <span>Start from first logged transaction</span>
-          </label>
-        </div>
-      </div>
-
-      {/* Recurring Payments Settings Section */}
-      <div className="spend-settings-section">
-        <h3 className="spend-settings-section-title">Bills & Subscriptions</h3>
-        <div className="spend-settings-grid">
-          <label className="spend-field">
-            <span>Default Reminder Days</span>
-            <input
-              type="number"
-              min="0"
-              step="1"
-              value={settings.recurringPayments.defaultReminderDaysBefore}
-              onChange={(event) =>
-                onRecurringChange(
-                  "defaultReminderDaysBefore",
-                  Math.max(0, Number(event.target.value || 0))
-                )
-              }
-            />
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.recurringPayments.showOverdueFirst}
-              onChange={(event) =>
-                onRecurringChange("showOverdueFirst", event.target.checked)
-              }
-            />
-            <span>Show overdue payments first</span>
-          </label>
-
-          <label className="settings-toggle">
-            <input
-              type="checkbox"
-              checked={settings.recurringPayments.showDashboardReminders}
-              onChange={(event) =>
-                onRecurringChange("showDashboardReminders", event.target.checked)
-              }
-            />
-            <span>Show bill reminders on dashboard</span>
-          </label>
-        </div>
-      </div>
-    </section>
-  );
-}
+// SettingsPanel moved to src/SettingsPanel.jsx
 
 function RecurringPaymentForm({
   draft,
@@ -1148,11 +838,10 @@ function RecurringPaymentItem({
   );
 }
 
-export default function Spending() {
-  const [settings, setSettings] = useState(loadAppSettings);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+export default function Spending({ settings }) {
+  const { t } = useTranslation(settings.appLanguage || "en");
   const [form, setForm] = useState(() =>
-    createEmptyForm(loadAppSettings().defaultCurrency)
+    createEmptyForm(settings.defaultCurrency)
   );
   const [isPastDate, setIsPastDate] = useState(false);
   const [dateOverride, setDateOverride] = useState(null);
@@ -1175,7 +864,7 @@ export default function Spending() {
   const [isRecurringFormOpen, setIsRecurringFormOpen] = useState(false);
   const [editingRecurringPaymentId, setEditingRecurringPaymentId] = useState(null);
   const [recurringForm, setRecurringForm] = useState(() =>
-    createEmptyRecurringForm(loadAppSettings())
+    createEmptyRecurringForm(settings)
   );
   const [timeInput, setTimeInput] = useState(() => getTimeValue(new Date()));
   const amountRef = useRef(null);
@@ -1190,9 +879,7 @@ export default function Spending() {
     };
   }, []);
 
-  useEffect(() => {
-    saveAppSettings(settings);
-  }, [settings]);
+
 
   useEffect(() => {
     localStorage.setItem(RECURRING_PAYMENTS_KEY, JSON.stringify(recurringPayments));
@@ -1384,41 +1071,6 @@ export default function Spending() {
     setEditForm((current) => ({ ...current, [name]: value }));
   }
 
-  function updateSetting(name, value) {
-    setSettings((current) => {
-      const next = { ...current, [name]: value };
-      if (name === "backgroundEffects") {
-        next.backgroundMotion = value;
-      }
-      if (name === "backgroundMotion") {
-        next.backgroundEffects = value;
-      }
-      return next;
-    });
-    if (name === "defaultCurrency" && !form.amount && !form.productName.trim()) {
-      setForm((currentForm) => ({ ...currentForm, currency: value }));
-    }
-  }
-
-  function updateNoSpendSetting(name, value) {
-    setSettings((current) => ({
-      ...current,
-      noSpendSettings: {
-        ...current.noSpendSettings,
-        [name]: value,
-      },
-    }));
-  }
-
-  function updateRecurringSetting(name, value) {
-    setSettings((current) => ({
-      ...current,
-      recurringPayments: {
-        ...current.recurringPayments,
-        [name]: value,
-      },
-    }));
-  }
 
   function setRecurringFormField(name, value) {
     setRecurringForm((current) => ({ ...current, [name]: value }));
@@ -1750,11 +1402,11 @@ export default function Spending() {
 
   const budgetAlert =
     budgetProgress.threshold === 100
-      ? "Budget reached. Review what can wait."
+      ? t("budget.alertReached")
       : budgetProgress.threshold === 80
-        ? "You have used 80% of this month's budget."
+        ? t("budget.alert80")
         : budgetProgress.threshold === 50
-          ? "You are halfway through this month's budget."
+          ? t("budget.alert50")
           : null;
 
   return (
@@ -1765,41 +1417,26 @@ export default function Spending() {
         {settings.recurringPayments.showDashboardReminders &&
           activeReminderCount > 0 && (
             <span className="recurring-reminder-pill">
-              {activeReminderCount} bill reminder
-              {activeReminderCount === 1 ? "" : "s"}
+              {activeReminderCount === 1
+                ? t("bills.billReminder", { count: activeReminderCount })
+                : t("bills.billReminders", { count: activeReminderCount })}
             </span>
           )}
-        <button
-          type="button"
-          className="secondary-action-btn"
-          onClick={() => setIsSettingsOpen((current) => !current)}
-          aria-expanded={isSettingsOpen}
-        >
-          Settings
-        </button>
       </div>
 
-      {isSettingsOpen && (
-        <SettingsPanel
-          settings={settings}
-          onChange={updateSetting}
-          onNoSpendChange={updateNoSpendSetting}
-          onRecurringChange={updateRecurringSetting}
-          onClose={() => setIsSettingsOpen(false)}
-        />
-      )}
+
 
       <div className="summary-dashboard">
         <div className="summary-card">
-          <div className="summary-label">Today</div>
+          <div className="summary-label">{t("summary.today")}</div>
           <div className="summary-amount">{formatMoney(aggregates.daily)}</div>
         </div>
         <div className="summary-card">
-          <div className="summary-label">This Week</div>
+          <div className="summary-label">{t("summary.thisWeek")}</div>
           <div className="summary-amount">{formatMoney(aggregates.weekly)}</div>
         </div>
         <div className="summary-card">
-          <div className="summary-label">This Month</div>
+          <div className="summary-label">{t("summary.thisMonth")}</div>
           <div className="summary-amount">{formatMoney(aggregates.monthly)}</div>
         </div>
       </div>
@@ -1814,32 +1451,33 @@ export default function Spending() {
           />
 
           {insights.transactionCount === 0 ? (
-            <p className="spend-muted">No expenses match this period yet.</p>
+            <p className="spend-muted">{t("spending.noExpenses")}</p>
           ) : (
             <>
               <p className="spend-insight-copy">
-                You spent the most on{" "}
-                <strong>{insights.topCategory?.category || "Other"}</strong>{" "}
-                {selectedPeriodLabel.toLowerCase()}.
+                {t("spending.topCategory", {
+                  category: insights.topCategory?.category || "Other",
+                  period: selectedPeriodLabel.toLowerCase(),
+                })}
               </p>
               <div className="spend-metric-grid">
                 <div>
-                  <span>Transactions</span>
+                  <span>{t("spending.transactions")}</span>
                   <strong>{insights.transactionCount}</strong>
                 </div>
                 <div>
-                  <span>Average</span>
+                  <span>{t("spending.average")}</span>
                   <strong>{formatMoney(insights.average)}</strong>
                 </div>
                 <div>
-                  <span>Highest</span>
+                  <span>{t("spending.highest")}</span>
                   <strong>{formatMoney(insights.highestExpense?.amount || 0)}</strong>
                 </div>
                 <div>
-                  <span>Previous Period</span>
+                  <span>{t("spending.prevPeriod")}</span>
                   <strong>
                     {insights.comparisonPercent === null
-                      ? "No baseline"
+                      ? t("spending.noBaseline")
                       : `${insights.comparisonPercent > 0 ? "+" : ""}${Math.round(
                           insights.comparisonPercent
                         )}%`}
@@ -1879,7 +1517,7 @@ export default function Spending() {
           />
           <form className="budget-form" onSubmit={handleBudgetSave}>
             <label className="spend-field">
-              <span>Monthly Budget ({displayCurrency})</span>
+              <span>{t("budget.monthlyBudget", { currency: displayCurrency })}</span>
               <input
                 type="number"
                 min="0"
@@ -1889,7 +1527,7 @@ export default function Spending() {
               />
             </label>
             <button type="submit" className="secondary-action-btn">
-              Save
+              {t("spending.save")}
             </button>
           </form>
           <div className="budget-progress" aria-label="Monthly budget progress">
@@ -1900,22 +1538,22 @@ export default function Spending() {
             />
           </div>
           <div className="budget-totals">
-            <span>Spent {formatMoney(budgetProgress.spent)}</span>
+            <span>{t("budget.spent", { amount: formatMoney(budgetProgress.spent) })}</span>
             <span>
               {budgetProgress.budget > 0
-                ? `${formatMoney(Math.max(budgetProgress.remaining, 0))} left`
-                : "Set a monthly target"}
+                ? t("budget.left", { amount: formatMoney(Math.max(budgetProgress.remaining, 0)) })
+                : t("budget.setTarget")}
             </span>
           </div>
           {monthlyBudgetBase > 0 &&
             settings.recurringPayments.showDashboardReminders && (
               <div className="budget-projection" aria-label="Projected monthly spending">
                 <div>
-                  <span>Upcoming bills this month</span>
+                  <span>{t("budget.upcomingBills")}</span>
                   <strong>{formatMoney(monthlyProjection.upcomingPlanned)}</strong>
                 </div>
                 <div>
-                  <span>Projected remaining</span>
+                  <span>{t("budget.projectedRemaining")}</span>
                   <strong>
                     {formatMoney(
                       monthlyBudgetBase - monthlyProjection.projectedTotal
@@ -1944,7 +1582,7 @@ export default function Spending() {
               className="secondary-action-btn"
               onClick={openAddRecurringPayment}
             >
-              Add Recurring Payment
+              {t("bills.addRecurring")}
             </button>
           </div>
 
@@ -1961,8 +1599,7 @@ export default function Spending() {
 
           {recurringOverview.all.length === 0 ? (
             <p className="spend-muted">
-              No recurring payments yet. Add rent, subscriptions, bills, or
-              memberships to plan ahead.
+              {t("bills.noRecurring")}
             </p>
           ) : (
             <div className="recurring-payment-groups">
@@ -2001,30 +1638,30 @@ export default function Spending() {
 
         <div className="spend-panel no-spend-panel">
           <SectionHeader
-            kicker="Chain"
-            title="No-Spend Tracker"
+            kicker={t("noSpend.chain")}
+            title={t("noSpend.title")}
             helpKey="noSpend"
             showHelp={settings.showHelpButtons}
           />
 
           {!noSpendSummary.hasData ? (
-            <p className="spend-muted">Log your first expense to begin tracking.</p>
+            <p className="spend-muted">{t("noSpend.logFirst")}</p>
           ) : (
             <>
               <div className="no-spend-hero">
-                <span>Current streak</span>
+                <span>{t("noSpend.currentStreak")}</span>
                 <strong>{noSpendSummary.current.streak}</strong>
                 <span>
-                  {noSpendSummary.current.streak === 1 ? "day" : "days"}
+                  {noSpendSummary.current.streak === 1 ? t("noSpend.day") : t("noSpend.days")}
                 </span>
               </div>
               <div className="no-spend-stats-grid">
                 <div>
-                  <span>Longest streak</span>
-                  <strong>{noSpendSummary.longest.streak} days</strong>
+                  <span>{t("noSpend.longestStreak")}</span>
+                  <strong>{t("noSpend.xDays", { count: noSpendSummary.longest.streak })}</strong>
                 </div>
                 <div>
-                  <span>This month</span>
+                  <span>{t("noSpend.thisMonth")}</span>
                   <strong>
                     {noSpendSummary.monthly.noSpendDays}
                     {noSpendSummary.monthly.completedDays
@@ -2033,27 +1670,27 @@ export default function Spending() {
                   </strong>
                 </div>
                 <div>
-                  <span>Rate this month</span>
+                  <span>{t("noSpend.rateThisMonth")}</span>
                   <strong>
                     {Math.round(noSpendSummary.monthly.rate * 100)}%
                   </strong>
                 </div>
                 <div>
-                  <span>Last spending day</span>
-                  <strong>{formatLocalDateKey(noSpendSummary.lastSpendingDate)}</strong>
+                  <span>{t("noSpend.lastSpendingDay")}</span>
+                  <strong>{noSpendSummary.lastSpendingDate ? formatLocalDateKey(noSpendSummary.lastSpendingDate) : t("noSpend.noSpendingYet")}</strong>
                 </div>
               </div>
               <p className="no-spend-today">
                 {settings.noSpendSettings.countTodayInCurrentStreakPreview
-                  ? noSpendSummary.today.label
+                  ? (noSpendSummary.today.hasSpending ? t("noSpend.spendingRecorded") : t("noSpend.noSpendingSoFar"))
                   : noSpendSummary.today.hasSpending
-                    ? "Today: Spending recorded"
-                    : "Today is not counted until it is complete."}
+                    ? t("noSpend.spendingRecorded")
+                    : t("noSpend.notCounted")}
               </p>
               <p className="spend-muted">
                 {noSpendSummary.today.hasSpending
-                  ? "Spending recorded today. Start a new chain tomorrow."
-                  : "You are building a no-spend chain."}
+                  ? t("noSpend.startNewChain")
+                  : t("noSpend.buildingChain")}
               </p>
             </>
           )}
@@ -2064,7 +1701,7 @@ export default function Spending() {
         <div className="spend-section-header">
           <span className="spend-section-kicker">{noSpendCalendar.monthLabel}</span>
           <div className="spend-title-with-help">
-            <h2>No-Spend Month View</h2>
+            <h2>{t("noSpend.monthView")}</h2>
             {settings.showHelpButtons && (
               <HelpButton
                 title={HELP_TEXT.noSpend.title}
@@ -2076,12 +1713,12 @@ export default function Spending() {
         </div>
 
         {!noSpendSummary.hasData ? (
-          <p className="spend-muted">Start logging expenses to see no-spend days.</p>
+          <p className="spend-muted">{t("noSpend.startLogging")}</p>
         ) : (
           <div className="no-spend-calendar-grid">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <span key={day} className="no-spend-weekday">
-                {day}
+            {["weekday.sun", "weekday.mon", "weekday.tue", "weekday.wed", "weekday.thu", "weekday.fri", "weekday.sat"].map((key) => (
+              <span key={key} className="no-spend-weekday">
+                {t(key)}
               </span>
             ))}
             {noSpendCalendar.days.map((day) => {
@@ -2090,14 +1727,14 @@ export default function Spending() {
               }
 
               const statusLabel = day.isFuture
-                ? "Future"
+                ? t("noSpend.future")
                 : day.hasSpending
-                  ? `Spent ${formatMoney(day.spendingTotal)}`
+                  ? t("noSpend.spentAmount", { amount: formatMoney(day.spendingTotal) })
                   : day.isToday
-                    ? "No spend so far"
+                    ? t("noSpend.noSpendSoFar")
                   : day.noSpend
-                    ? "No spend"
-                    : "No data";
+                    ? t("noSpend.noSpend")
+                    : t("noSpend.noData");
 
               return (
                 <div
@@ -2126,7 +1763,7 @@ export default function Spending() {
 
       <div className="spend-controls-row">
         <div className="entry-date-control">
-          <span className="spend-label">Expense Date</span>
+          <span className="spend-label">{t("spending.expenseDate")}</span>
           <div className="date-toggle-group" role="group" aria-label="Expense date">
             <button
               type="button"
@@ -2136,7 +1773,7 @@ export default function Spending() {
                 setDateOverride(null);
               }}
             >
-              Today
+              {t("spending.today")}
             </button>
             <button
               type="button"
@@ -2148,7 +1785,7 @@ export default function Spending() {
                 setTimeInput(getTimeValue(dateOverride || now));
               }}
             >
-              Other Date
+              {t("spending.otherDate")}
             </button>
           </div>
         </div>
@@ -2189,6 +1826,7 @@ export default function Spending() {
           <label className="spend-field spend-field--amount">
             <span>Amount</span>
             <input
+              id="add-expense-amount"
               ref={amountRef}
               type="number"
               min="0"
@@ -2219,7 +1857,7 @@ export default function Spending() {
               type="text"
               value={form.productName}
               onChange={(e) => setFormField("productName", e.target.value)}
-              placeholder="Merchant or item"
+              placeholder={t("spending.placeholderDesc")}
               required
             />
           </label>
@@ -2277,7 +1915,7 @@ export default function Spending() {
               type="text"
               value={form.tags}
               onChange={(e) => setFormField("tags", e.target.value)}
-              placeholder="work, weekend, subscription"
+              placeholder={t("spending.placeholderTags")}
             />
           </div>
 
@@ -2287,7 +1925,7 @@ export default function Spending() {
               type="text"
               value={form.note}
               onChange={(e) => setFormField("note", e.target.value)}
-              placeholder="Optional context"
+              placeholder={t("spending.placeholderNote")}
             />
           </label>
         </div>
@@ -2300,7 +1938,7 @@ export default function Spending() {
                 checked={form.isRecurring}
                 onChange={(e) => setFormField("isRecurring", e.target.checked)}
               />
-              <span>Recurring payment</span>
+              <span>{t("spending.recurring")}</span>
             </label>
             {settings.showHelpButtons && (
               <HelpButton
@@ -2336,11 +1974,11 @@ export default function Spending() {
                 className="secondary-action-btn"
                 onClick={() => handleDuplicate(normalizedHistory[0])}
               >
-                Duplicate Last
+                {t("spending.duplicateLast")}
               </button>
             )}
             <button type="submit" className="spend-submit-btn">
-              Add Expense
+              {t("spending.addExpense")}
             </button>
           </div>
         </div>
@@ -2357,12 +1995,13 @@ export default function Spending() {
         <label className="spend-field spend-search-field">
           <span>Search</span>
           <input
+            id="search-transactions"
             type="search"
             value={filters.query}
             onChange={(e) =>
               setFilters((current) => ({ ...current, query: e.target.value }))
             }
-            placeholder="Description, category, tag, or payment method"
+            placeholder={t("filters.searchPlaceholder")}
           />
         </label>
 
@@ -2393,7 +2032,7 @@ export default function Spending() {
               }))
             }
           >
-            <option value="All">All Categories</option>
+            <option value="All">{t("filters.allCategories")}</option>
             {DEFAULT_CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {category}
@@ -2410,7 +2049,7 @@ export default function Spending() {
               setFilters((current) => ({ ...current, tag: e.target.value }))
             }
           >
-            <option value="All">All Tags</option>
+            <option value="All">{t("filters.allTags")}</option>
             {availableTags.map((tag) => (
               <option key={tag} value={tag}>
                 {tag}
@@ -2430,7 +2069,7 @@ export default function Spending() {
               }))
             }
           >
-            <option value="All">All Methods</option>
+            <option value="All">{t("filters.allMethods")}</option>
             {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
                 {method}
@@ -2442,9 +2081,9 @@ export default function Spending() {
 
       {undoEntry && (
         <div className="undo-banner" role="status">
-          <span>Deleted "{undoEntry.product_name}".</span>
+          <span>{t("undo.deleted", { name: undoEntry.product_name })}</span>
           <button type="button" onClick={handleUndoDelete}>
-            Undo
+            {t("undo.undo")}
           </button>
         </div>
       )}
@@ -2462,13 +2101,13 @@ export default function Spending() {
             )}
           </div>
           <span>
-            {filteredHistory.length} of {normalizedHistory.length} shown
+            {t("spending.xOfYShown", { shown: filteredHistory.length, total: normalizedHistory.length })}
           </span>
         </div>
 
         <div className="spend-history-container">
           {filteredHistory.length === 0 ? (
-            <div className="empty-state">No spending entries match these filters.</div>
+            <div className="empty-state">{t("spending.noMatch")}</div>
           ) : (
             Object.entries(groupedHistory).map(([date, dayLogs]) => {
               const dayTotal = dayLogs.reduce((sum, log) => sum + log.amount, 0);
@@ -2477,7 +2116,7 @@ export default function Spending() {
                   <div className="spend-date-header">
                     <span>{date}</span>
                     <span className="spend-day-total">
-                      Total: {formatMoney(dayTotal)}
+                      {t("spending.totalAmount", { amount: formatMoney(dayTotal) })}
                     </span>
                   </div>
                   <div className="spend-day-items">
@@ -2507,7 +2146,7 @@ export default function Spending() {
                               {(log.is_recurring_generated ||
                                 log.source_recurring_payment_id) && (
                                 <span className="recurring-chip">
-                                  From subscription
+                                  {t("spending.fromSubscription")}
                                 </span>
                               )}
                             </div>
@@ -2529,13 +2168,13 @@ export default function Spending() {
                             <div className="spend-item-amount">{formatMoney(log.amount)}</div>
                             <div className="spend-item-actions">
                               <button type="button" onClick={() => handleEdit(log)}>
-                                Edit
+                                {t("spending.edit")}
                               </button>
                               <button type="button" onClick={() => handleDuplicate(log)}>
-                                Duplicate
+                                {t("spending.duplicate")}
                               </button>
                               <button type="button" onClick={() => handleDelete(log)}>
-                                Delete
+                                {t("spending.delete")}
                               </button>
                             </div>
                           </div>

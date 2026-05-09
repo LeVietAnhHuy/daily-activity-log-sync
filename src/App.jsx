@@ -5,8 +5,20 @@ import Calendar from "./Calendar";
 import Spending from "./Spending";
 import ThemePicker from "./ThemePicker";
 import { applyTheme, getStoredTheme } from "./themes";
+import { useTranslation } from "./i18n";
+import SettingsPanel from "./SettingsPanel";
+import CommandPalette from "./CommandPalette";
+import { loadAppSettings, saveAppSettings } from "./settingsManager";
 import "./App.css";
 import "./theme-anime-dark.css";
+
+const APP_SETTINGS_KEY = "spend-app-settings";
+const SETTINGS_EVENT = "daily-log-settings-changed";
+
+function getAppLanguage() {
+  const stored = loadAppSettings();
+  return stored.appLanguage || "en";
+}
 
 function App() {
   const [logs, setLogs] = useState([]);
@@ -15,9 +27,55 @@ function App() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [activeTab, setActiveTab] = useState("log");
   const [themeId, setThemeId] = useState(() => getStoredTheme().id);
+  const [appLanguage, setAppLanguage] = useState(getAppLanguage);
+  const [settings, setSettings] = useState(loadAppSettings);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const { t } = useTranslation(appLanguage);
   const inputRef = useRef(null);
   const searchTimerRef = useRef(null);
   const searchRequestRef = useRef(0);
+
+  useEffect(() => {
+    saveAppSettings(settings);
+    setAppLanguage(settings.appLanguage);
+  }, [settings]);
+
+  function updateSetting(name, value) {
+    setSettings((current) => {
+      const next = { ...current, [name]: value };
+      if (name === "backgroundEffects") next.backgroundMotion = value;
+      if (name === "backgroundMotion") next.backgroundEffects = value;
+      return next;
+    });
+  }
+
+  function updateNoSpendSetting(name, value) {
+    setSettings((current) => ({
+      ...current,
+      noSpendSettings: { ...current.noSpendSettings, [name]: value },
+    }));
+  }
+
+  function updateRecurringSetting(name, value) {
+    setSettings((current) => ({
+      ...current,
+      recurringPayments: { ...current.recurringPayments, [name]: value },
+    }));
+  }
+
+  // Listen for settings changes from Spending component
+  // Listen for external settings changes (e.g. from other tabs if we had them)
+  useEffect(() => {
+    function handleSettingsChange(e) {
+      if (e.detail) {
+        setSettings(e.detail);
+        if (e.detail.appLanguage) setAppLanguage(e.detail.appLanguage);
+      }
+    }
+    window.addEventListener(SETTINGS_EVENT, handleSettingsChange);
+    return () => window.removeEventListener(SETTINGS_EVENT, handleSettingsChange);
+  }, []);
 
   useEffect(() => {
     applyTheme(getStoredTheme());
@@ -31,6 +89,13 @@ function App() {
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
+      // Command Palette Shortcut
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+        return;
+      }
+
       if (
         activeTab === "log" &&
         document.activeElement !== inputRef.current &&
@@ -140,6 +205,95 @@ function App() {
       hour12: false,
     });
 
+  const commandActions = useMemo(() => [
+    {
+      id: "nav-log",
+      title: t("cmd.navLog"),
+      group: t("cmd.groupNavigation"),
+      keywords: ["log", "home"],
+      run: () => { setActiveTab("log"); setIsCommandPaletteOpen(false); }
+    },
+    {
+      id: "nav-calendar",
+      title: t("cmd.navCalendar"),
+      group: t("cmd.groupNavigation"),
+      keywords: ["calendar", "date", "history"],
+      run: () => { setActiveTab("calendar"); setIsCommandPaletteOpen(false); }
+    },
+    {
+      id: "nav-spending",
+      title: t("cmd.navSpending"),
+      group: t("cmd.groupNavigation"),
+      keywords: ["spending", "money", "budget", "expenses"],
+      run: () => { setActiveTab("spending"); setIsCommandPaletteOpen(false); }
+    },
+    {
+      id: "open-settings",
+      title: t("cmd.openSettings"),
+      group: t("cmd.groupNavigation"),
+      keywords: ["settings", "preferences", "config"],
+      run: () => { setIsSettingsOpen(true); setIsCommandPaletteOpen(false); }
+    },
+    {
+      id: "action-add-expense",
+      title: t("cmd.addExpense"),
+      group: t("cmd.groupActions"),
+      keywords: ["add", "expense", "spend", "new", "transaction"],
+      run: () => {
+        setActiveTab("spending");
+        setIsCommandPaletteOpen(false);
+        setTimeout(() => {
+          const el = document.getElementById("add-expense-amount");
+          if (el) el.focus();
+        }, 100);
+      }
+    },
+    {
+      id: "action-search-transactions",
+      title: t("cmd.searchTransactions"),
+      group: t("cmd.groupActions"),
+      keywords: ["search", "find", "transactions", "expenses"],
+      run: () => {
+        setActiveTab("spending");
+        setIsCommandPaletteOpen(false);
+        setTimeout(() => {
+          const el = document.getElementById("search-transactions");
+          if (el) el.focus();
+        }, 100);
+      }
+    },
+    {
+      id: "setting-toggle-theme",
+      title: t("cmd.toggleTheme"),
+      group: t("cmd.groupSettings"),
+      keywords: ["theme", "dark", "light", "anime", "appearance"],
+      run: () => {
+        setThemeId((prev) => prev === "default-dark" ? "anime-dark" : "default-dark");
+        setIsCommandPaletteOpen(false);
+      }
+    },
+    {
+      id: "setting-change-lang",
+      title: t("cmd.changeLang"),
+      group: t("cmd.groupSettings"),
+      keywords: ["language", "english", "vietnamese", "korean", "japanese", "locale", "translate"],
+      run: () => {
+        setIsSettingsOpen(true);
+        setIsCommandPaletteOpen(false);
+      }
+    },
+    {
+      id: "setting-change-currency",
+      title: t("cmd.changeCurrency"),
+      group: t("cmd.groupSettings"),
+      keywords: ["currency", "money", "display", "format"],
+      run: () => {
+        setIsSettingsOpen(true);
+        setIsCommandPaletteOpen(false);
+      }
+    }
+  ], [t, setThemeId, setActiveTab]);
+
   return (
     <div className="app-shell">
       <AppBackground />
@@ -149,25 +303,43 @@ function App() {
             <div className="header-top">
               <h1 className="title">Daily Log</h1>
               <div className="header-controls">
+                <button
+                  type="button"
+                  className="secondary-action-btn"
+                  onClick={() => setIsCommandPaletteOpen(true)}
+                  aria-label="Quick Actions"
+                  title="Ctrl+K / Cmd+K"
+                >
+                  ⚡ {t("cmd.quickActions")}
+                </button>
+                <button
+                  type="button"
+                  className="secondary-action-btn"
+                  onClick={() => setIsSettingsOpen((current) => !current)}
+                  aria-expanded={isSettingsOpen}
+                  aria-label="Open settings"
+                >
+                  {t("settings.title")}
+                </button>
                 <ThemePicker currentThemeId={themeId} onThemeChange={setThemeId} />
                 <div className="tab-bar">
                   <button
                     className={`tab-btn${activeTab === "log" ? " tab-btn--active" : ""}`}
                     onClick={() => setActiveTab("log")}
                   >
-                    ☰ Log
+                    ☰ {t("nav.log")}
                   </button>
                   <button
                     className={`tab-btn${activeTab === "calendar" ? " tab-btn--active" : ""}`}
                     onClick={() => setActiveTab("calendar")}
                   >
-                    📅 Calendar
+                    📅 {t("nav.calendar")}
                   </button>
                   <button
                     className={`tab-btn${activeTab === "spending" ? " tab-btn--active" : ""}`}
                     onClick={() => setActiveTab("spending")}
                   >
-                    💰 Spending
+                    💰 {t("nav.spending")}
                   </button>
                 </div>
               </div>
@@ -206,6 +378,24 @@ function App() {
               </div>
             )}
           </header>
+
+          {isSettingsOpen && (
+            <SettingsPanel
+              settings={settings}
+              onChange={updateSetting}
+              onNoSpendChange={updateNoSpendSetting}
+              onRecurringChange={updateRecurringSetting}
+              onClose={() => setIsSettingsOpen(false)}
+              t={t}
+            />
+          )}
+
+          <CommandPalette
+            isOpen={isCommandPaletteOpen}
+            onClose={() => setIsCommandPaletteOpen(false)}
+            t={t}
+            actions={commandActions}
+          />
 
           {activeTab === "calendar" && (
             <Calendar
@@ -247,7 +437,7 @@ function App() {
           )}
 
           {activeTab === "spending" && (
-            <Spending />
+            <Spending settings={settings} />
           )}
         </div>
       </div>
