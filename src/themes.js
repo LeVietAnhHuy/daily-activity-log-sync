@@ -9,12 +9,20 @@
  * 7. Lagoon        → ocean teal vivid   (dark vibrant)
  * 8. Noir          → bold black & red   (dark dramatic)
  */
+export const THEME_EVENT = "daily-log-theme-changed";
+
 export const themes = [
   // ── 1. Cosmic ──────────────────────────────────────────
   {
     id: "cosmic",
     name: "Cosmic",
     preview: ["#061d40", "#27C0FE", "#00C489", "#FCDC4C"],
+    background: {
+      image: "/themes/cosmic/anime-moon-background.webp",
+      position: "right center",
+      opacity: "0.5",
+      motion: "from-right",
+    },
     vars: {
       "--bg-color":        "#061d40",
       "--surface-color":   "#0d3166",
@@ -217,6 +225,7 @@ export function applyTheme(theme) {
     root.style.setProperty(key, value);
   });
   localStorage.setItem("daily-log-theme", theme.id);
+  window.dispatchEvent(new CustomEvent(THEME_EVENT, { detail: theme }));
 }
 
 export function getStoredTheme() {

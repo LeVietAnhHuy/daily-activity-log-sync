@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./AppBackground.css";
 import { animeDarkTheme } from "./theme/animeDarkTheme";
-import { applyTheme, getStoredTheme } from "./themes";
+import { THEME_EVENT, applyTheme, getStoredTheme } from "./themes";
 
 const APP_SETTINGS_KEY = "spend-app-settings";
 const SETTINGS_EVENT = "daily-log-settings-changed";
@@ -44,6 +44,7 @@ export default function AppBackground({
   const [backgroundSettings, setBackgroundSettings] = useState(() =>
     getStoredBackgroundSettings(defaultMotion)
   );
+  const [baseTheme, setBaseTheme] = useState(() => getStoredTheme());
   const [reducedMotion, setReducedMotion] = useState(getInitialReducedMotion);
 
   const visualTheme = backgroundSettings.theme;
@@ -80,6 +81,25 @@ export default function AppBackground({
       window.removeEventListener("storage", handleStorage);
     };
   }, [defaultMotion]);
+
+  useEffect(() => {
+    const handleThemeChange = (event) => {
+      setBaseTheme(event.detail?.id ? event.detail : getStoredTheme());
+    };
+    const handleStorage = (event) => {
+      if (event.key === "daily-log-theme") {
+        setBaseTheme(getStoredTheme());
+      }
+    };
+
+    window.addEventListener(THEME_EVENT, handleThemeChange);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener(THEME_EVENT, handleThemeChange);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -260,11 +280,23 @@ export default function AppBackground({
     };
   }, [motionMode, reducedMotion, autoReduceMotionInFullscreen]);
 
+  const themeBackground =
+    visualTheme === "default-dark" ? baseTheme.background : null;
+  const effectiveBackgroundImage =
+    backgroundImage || themeBackground?.image || "";
+  const backgroundMotionClass = themeBackground?.motion
+    ? `app-background--image-motion-${themeBackground.motion}`
+    : "";
+
   const style = useMemo(
     () => ({
-      "--app-background-image": backgroundImage ? `url("${backgroundImage}")` : "none",
+      "--app-background-image": effectiveBackgroundImage
+        ? `url("${effectiveBackgroundImage}")`
+        : "none",
+      "--app-background-position": themeBackground?.position || "center",
+      "--app-background-opacity": themeBackground?.opacity || "0.34",
     }),
-    [backgroundImage]
+    [effectiveBackgroundImage, themeBackground?.opacity, themeBackground?.position]
   );
 
   return (
@@ -276,7 +308,8 @@ export default function AppBackground({
         `app-background--intensity-${intensity}`,
         `app-background--theme-${visualTheme}`,
         `app-background--theme-intensity-${themeIntensity}`,
-        backgroundImage ? "app-background--image" : "app-background--mesh",
+        effectiveBackgroundImage ? "app-background--image app-background--theme-image" : "app-background--mesh",
+        backgroundMotionClass,
       ]
         .filter(Boolean)
         .join(" ")}
