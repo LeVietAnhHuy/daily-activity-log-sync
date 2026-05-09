@@ -66,6 +66,11 @@ const defaultAppSettings = {
   defaultCurrency: "VND",
   displayCurrency: "VND",
   locale: "en-US",
+  // Language settings (Phase 1)
+  appLanguage: "en",
+  formatLocaleMode: "currency",
+  autoMatchLanguageToCurrency: false,
+  // End language settings
   transactionDensity: "comfortable",
   theme: "default-dark",
   backgroundEffects: "on",
@@ -97,6 +102,19 @@ function loadAppSettings() {
         stored.displayCurrency || legacyDisplayCurrency || defaultAppSettings.displayCurrency,
       defaultCurrency:
         stored.defaultCurrency || legacyDisplayCurrency || defaultAppSettings.defaultCurrency,
+      // Language settings with safe fallbacks
+      appLanguage:
+        stored.appLanguage && ["en", "vi", "ko"].includes(stored.appLanguage)
+          ? stored.appLanguage
+          : defaultAppSettings.appLanguage,
+      formatLocaleMode:
+        stored.formatLocaleMode === "language" || stored.formatLocaleMode === "currency"
+          ? stored.formatLocaleMode
+          : defaultAppSettings.formatLocaleMode,
+      autoMatchLanguageToCurrency:
+        typeof stored.autoMatchLanguageToCurrency === "boolean"
+          ? stored.autoMatchLanguageToCurrency
+          : defaultAppSettings.autoMatchLanguageToCurrency,
       showHelpButtons:
         typeof stored.showHelpButtons === "boolean"
           ? stored.showHelpButtons
@@ -567,187 +585,268 @@ function SettingsPanel({
         </button>
       </div>
 
-      <div className="spend-settings-grid">
-        <label className="spend-field">
-          <span>Default Currency</span>
-          <select
-            value={settings.defaultCurrency}
-            onChange={(event) => onChange("defaultCurrency", event.target.value)}
-          >
-            {CURRENCY_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* Appearance Section */}
+      <div className="spend-settings-section">
+        <h3 className="spend-settings-section-title">Appearance</h3>
+        <div className="spend-settings-grid">
+          <label className="spend-field">
+            <span>Theme</span>
+            <select
+              value={settings.theme}
+              onChange={(event) => onChange("theme", event.target.value)}
+            >
+              <option value="default-dark">Default Dark</option>
+              <option value="anime-dark">Anime Dark Fantasy</option>
+            </select>
+          </label>
 
-        <label className="spend-field">
-          <span>Display Currency</span>
-          <select
-            value={settings.displayCurrency}
-            onChange={(event) => onChange("displayCurrency", event.target.value)}
-          >
-            {CURRENCY_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="spend-field">
+            <span>Background Effects</span>
+            <select
+              value={settings.backgroundEffects || settings.backgroundMotion}
+              onChange={(event) => onChange("backgroundEffects", event.target.value)}
+            >
+              <option value="on">On</option>
+              <option value="reduced">Reduced</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
 
-        <label className="spend-field">
-          <span>Locale / Number Format</span>
-          <select
-            value={settings.locale}
-            onChange={(event) => onChange("locale", event.target.value)}
-          >
-            {LOCALE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="spend-field">
+            <span>Theme Intensity</span>
+            <select
+              value={settings.themeIntensity}
+              onChange={(event) => onChange("themeIntensity", event.target.value)}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
 
-        <label className="spend-field">
-          <span>Transaction View</span>
-          <select
-            value={settings.transactionDensity}
-            onChange={(event) =>
-              onChange("transactionDensity", event.target.value)
-            }
-          >
-            <option value="comfortable">Comfortable</option>
-            <option value="compact">Compact</option>
-          </select>
-        </label>
+          <label className="spend-field">
+            <span>Transaction View</span>
+            <select
+              value={settings.transactionDensity}
+              onChange={(event) =>
+                onChange("transactionDensity", event.target.value)
+              }
+            >
+              <option value="comfortable">Comfortable</option>
+              <option value="compact">Compact</option>
+            </select>
+          </label>
 
-        <label className="spend-field">
-          <span>Theme</span>
-          <select
-            value={settings.theme}
-            onChange={(event) => onChange("theme", event.target.value)}
-          >
-            <option value="default-dark">Default Dark</option>
-            <option value="anime-dark">Anime Dark Fantasy</option>
-          </select>
-        </label>
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.autoReduceMotionInFullscreen !== false}
+              onChange={(event) =>
+                onChange("autoReduceMotionInFullscreen", event.target.checked)
+              }
+            />
+            <span>Auto reduce motion in fullscreen</span>
+          </label>
 
-        <label className="spend-field">
-          <span>Background Effects</span>
-          <select
-            value={settings.backgroundEffects || settings.backgroundMotion}
-            onChange={(event) => onChange("backgroundEffects", event.target.value)}
-          >
-            <option value="on">On</option>
-            <option value="reduced">Reduced</option>
-            <option value="off">Off</option>
-          </select>
-        </label>
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.showHelpButtons}
+              onChange={(event) => onChange("showHelpButtons", event.target.checked)}
+            />
+            <span>Show help buttons</span>
+          </label>
+        </div>
+      </div>
 
-        <label className="spend-field">
-          <span>Theme Intensity</span>
-          <select
-            value={settings.themeIntensity}
-            onChange={(event) => onChange("themeIntensity", event.target.value)}
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
+      {/* Language Section */}
+      <div className="spend-settings-section">
+        <h3 className="spend-settings-section-title">Language</h3>
+        <div className="spend-settings-grid">
+          <label className="spend-field">
+            <span>App Language</span>
+            <select
+              value={settings.appLanguage}
+              onChange={(event) => onChange("appLanguage", event.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="vi">Tiếng Việt</option>
+              <option value="ko">한국어</option>
+            </select>
+          </label>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.autoReduceMotionInFullscreen !== false}
-            onChange={(event) =>
-              onChange("autoReduceMotionInFullscreen", event.target.checked)
-            }
-          />
-          <span>Auto reduce motion in fullscreen</span>
-        </label>
+          <label className="spend-field">
+            <span>Date / Number Format</span>
+            <select
+              value={settings.formatLocaleMode}
+              onChange={(event) => onChange("formatLocaleMode", event.target.value)}
+            >
+              <option value="language">Follow App Language</option>
+              <option value="currency">Follow Display Currency</option>
+            </select>
+          </label>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.showHelpButtons}
-            onChange={(event) => onChange("showHelpButtons", event.target.checked)}
-          />
-          <span>Show help buttons</span>
-        </label>
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.autoMatchLanguageToCurrency}
+              onChange={(event) => {
+                const newValue = event.target.checked;
+                onChange("autoMatchLanguageToCurrency", newValue);
+                // If enabling auto-match, also update language to match current currency
+                if (newValue) {
+                  const currency = settings.displayCurrency || "VND";
+                  const localeMap = {
+                    VND: "vi",
+                    KRW: "ko",
+                    USD: "en",
+                    EUR: "en",
+                    JPY: "en",
+                    CNY: "en",
+                    GBP: "en",
+                  };
+                  const suggestedLang = localeMap[currency] || "en";
+                  onChange("appLanguage", suggestedLang);
+                }
+              }}
+            />
+            <span>Auto-match language to display currency</span>
+          </label>
+        </div>
+      </div>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.noSpendSettings.countTodayInCurrentStreakPreview}
-            onChange={(event) =>
-              onNoSpendChange("countTodayInCurrentStreakPreview", event.target.checked)
-            }
-          />
-          <span>Preview today in no-spend status</span>
-        </label>
+      {/* Currency Section */}
+      <div className="spend-settings-section">
+        <h3 className="spend-settings-section-title">Currency</h3>
+        <div className="spend-settings-grid">
+          <label className="spend-field">
+            <span>Default Currency</span>
+            <select
+              value={settings.defaultCurrency}
+              onChange={(event) => onChange("defaultCurrency", event.target.value)}
+            >
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.noSpendSettings.excludeIncomeFromSpending}
-            onChange={(event) =>
-              onNoSpendChange("excludeIncomeFromSpending", event.target.checked)
-            }
-          />
-          <span>Income does not break streak</span>
-        </label>
+          <label className="spend-field">
+            <span>Display Currency</span>
+            <select
+              value={settings.displayCurrency}
+              onChange={(event) => {
+                const newCurrency = event.target.value;
+                onChange("displayCurrency", newCurrency);
+                // Auto-match language if enabled
+                if (settings.autoMatchLanguageToCurrency) {
+                  const localeMap = {
+                    VND: "vi",
+                    KRW: "ko",
+                    USD: "en",
+                    EUR: "en",
+                    JPY: "en",
+                    CNY: "en",
+                    GBP: "en",
+                  };
+                  const suggestedLang = localeMap[newCurrency] || "en";
+                  onChange("appLanguage", suggestedLang);
+                }
+              }}
+            >
+              {CURRENCY_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </div>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.noSpendSettings.startTrackingFromFirstTransaction}
-            onChange={(event) =>
-              onNoSpendChange("startTrackingFromFirstTransaction", event.target.checked)
-            }
-          />
-          <span>Start from first logged transaction</span>
-        </label>
+      {/* No-Spend Settings Section */}
+      <div className="spend-settings-section">
+        <h3 className="spend-settings-section-title">No-Spend Tracker</h3>
+        <div className="spend-settings-grid">
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.noSpendSettings.countTodayInCurrentStreakPreview}
+              onChange={(event) =>
+                onNoSpendChange("countTodayInCurrentStreakPreview", event.target.checked)
+              }
+            />
+            <span>Preview today in no-spend status</span>
+          </label>
 
-        <label className="spend-field">
-          <span>Default Reminder Days</span>
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={settings.recurringPayments.defaultReminderDaysBefore}
-            onChange={(event) =>
-              onRecurringChange(
-                "defaultReminderDaysBefore",
-                Math.max(0, Number(event.target.value || 0))
-              )
-            }
-          />
-        </label>
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.noSpendSettings.excludeIncomeFromSpending}
+              onChange={(event) =>
+                onNoSpendChange("excludeIncomeFromSpending", event.target.checked)
+              }
+            />
+            <span>Income does not break streak</span>
+          </label>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.recurringPayments.showOverdueFirst}
-            onChange={(event) =>
-              onRecurringChange("showOverdueFirst", event.target.checked)
-            }
-          />
-          <span>Show overdue payments first</span>
-        </label>
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.noSpendSettings.startTrackingFromFirstTransaction}
+              onChange={(event) =>
+                onNoSpendChange("startTrackingFromFirstTransaction", event.target.checked)
+              }
+            />
+            <span>Start from first logged transaction</span>
+          </label>
+        </div>
+      </div>
 
-        <label className="settings-toggle">
-          <input
-            type="checkbox"
-            checked={settings.recurringPayments.showDashboardReminders}
-            onChange={(event) =>
-              onRecurringChange("showDashboardReminders", event.target.checked)
-            }
-          />
-          <span>Show bill reminders on dashboard</span>
-        </label>
+      {/* Recurring Payments Settings Section */}
+      <div className="spend-settings-section">
+        <h3 className="spend-settings-section-title">Bills & Subscriptions</h3>
+        <div className="spend-settings-grid">
+          <label className="spend-field">
+            <span>Default Reminder Days</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={settings.recurringPayments.defaultReminderDaysBefore}
+              onChange={(event) =>
+                onRecurringChange(
+                  "defaultReminderDaysBefore",
+                  Math.max(0, Number(event.target.value || 0))
+                )
+              }
+            />
+          </label>
+
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.recurringPayments.showOverdueFirst}
+              onChange={(event) =>
+                onRecurringChange("showOverdueFirst", event.target.checked)
+              }
+            />
+            <span>Show overdue payments first</span>
+          </label>
+
+          <label className="settings-toggle">
+            <input
+              type="checkbox"
+              checked={settings.recurringPayments.showDashboardReminders}
+              onChange={(event) =>
+                onRecurringChange("showDashboardReminders", event.target.checked)
+              }
+            />
+            <span>Show bill reminders on dashboard</span>
+          </label>
+        </div>
       </div>
     </section>
   );
@@ -1229,9 +1328,9 @@ export default function Spending() {
     () => ({
       ...settings.noSpendSettings,
       now: new Date(),
-      locale: settings.locale,
+      locale: getAppLocale(settings),
     }),
-    [settings.noSpendSettings, settings.locale]
+    [settings.noSpendSettings, settings.appLanguage, settings.formatLocaleMode, settings.displayCurrency]
   );
 
   const noSpendSummary = useMemo(

@@ -2,6 +2,60 @@ export const BASE_CURRENCY = "VND";
 export const CURRENCY_LOCALE = "en-US";
 export const METADATA_CURRENCY_CODES = ["VND", "KRW", "USD", "EUR", "JPY", "CNY", "GBP"];
 
+/**
+ * Currency to locale mapping for formatting.
+ * This is used when formatLocaleMode === "currency".
+ */
+export const CURRENCY_LOCALE_MAP = {
+  VND: { locale: "vi-VN", suggestedLanguage: "vi" },
+  KRW: { locale: "ko-KR", suggestedLanguage: "ko" },
+  USD: { locale: "en-US", suggestedLanguage: "en" },
+  EUR: { locale: "en-GB", suggestedLanguage: "en" },
+  JPY: { locale: "ja-JP", suggestedLanguage: "en" },
+  CNY: { locale: "zh-CN", suggestedLanguage: "en" },
+  GBP: { locale: "en-GB", suggestedLanguage: "en" },
+};
+
+/**
+ * Get the locale to use for formatting based on settings.
+ * 
+ * Rules:
+ * - If formatLocaleMode === "language": use locale from appLanguage
+ * - If formatLocaleMode === "currency": use locale from displayCurrency
+ * - Fallback: return "en-US"
+ */
+export function getAppLocale(settings) {
+  if (!settings) return "en-US";
+
+  const mode = settings.formatLocaleMode || "currency";
+
+  if (mode === "language") {
+    const lang = settings.appLanguage || "en";
+    switch (lang) {
+      case "vi":
+        return "vi-VN";
+      case "ko":
+        return "ko-KR";
+      default:
+        return "en-US";
+    }
+  }
+
+  // mode === "currency"
+  const currency = settings.displayCurrency || "VND";
+  const mapping = CURRENCY_LOCALE_MAP[currency];
+  return mapping?.locale || "en-US";
+}
+
+/**
+ * Get suggested language based on display currency.
+ * Used when autoMatchLanguageToCurrency is enabled.
+ */
+export function getSuggestedLanguageForCurrency(currency) {
+  const mapping = CURRENCY_LOCALE_MAP[currency];
+  return mapping?.suggestedLanguage || null;
+}
+
 export const exchangeRates = {
   VND: 1,
   USD: 25400,
