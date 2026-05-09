@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Original arcane magic circle placeholder">
+  <defs>
+    <linearGradient id="rune" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff244f"/>
+      <stop offset="0.52" stop-color="#7c3cff"/>
+      <stop offset="1" stop-color="#f6c85f"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#rune)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.86">
+    <circle cx="256" cy="256" r="224"/>
+    <circle cx="256" cy="256" r="174"/>
+    <circle cx="256" cy="256" r="94"/>
+    <path d="M256 70 418 350H94Z"/>
+    <path d="M256 442 94 162h324Z"/>
+    <path d="M256 32v70M256 410v70M32 256h70M410 256h70"/>
+    <path d="m98 98 50 50m216 216 50 50m0-316-50 50M148 364l-50 50"/>
+    <path d="M174 256c0-45 37-82 82-82s82 37 82 82-37 82-82 82-82-37-82-82Z"/>
+  </g>
+  <g fill="#f6c85f" opacity="0.82">
+    <circle cx="256" cy="70" r="8"/>
+    <circle cx="256" cy="442" r="8"/>
+    <circle cx="70" cy="256" r="8"/>
+    <circle cx="442" cy="256" r="8"/>
+    <circle cx="148" cy="148" r="6"/>
+    <circle cx="364" cy="148" r="6"/>
+    <circle cx="364" cy="364" r="6"/>
+    <circle cx="148" cy="364" r="6"/>
+  </g>
+</svg>

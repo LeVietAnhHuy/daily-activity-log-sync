@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 520" role="img" aria-label="Original sword sigil placeholder">
+  <defs>
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f6c85f"/>
+      <stop offset="0.45" stop-color="#ff244f"/>
+      <stop offset="1" stop-color="#7c3cff"/>
+    </linearGradient>
+  </defs>
+  <path d="M110 20 142 278l-32 54-32-54Z" fill="none" stroke="url(#blade)" stroke-width="10" stroke-linejoin="round" opacity="0.9"/>
+  <path d="M58 334h104M86 372h48M110 334v144" stroke="#f6c85f" stroke-width="12" stroke-linecap="round" opacity="0.74"/>
+  <path d="M82 478h56l-14 26H96Z" fill="none" stroke="#ff244f" stroke-width="8" stroke-linejoin="round" opacity="0.78"/>
+  <path d="M110 72v190" stroke="#f5f1ff" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+</svg>

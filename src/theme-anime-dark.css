@@ -1,0 +1,249 @@
+.theme-anime-dark body {
+  background-color: #050508;
+}
+
+.theme-anime-dark .title {
+  background: linear-gradient(90deg, #ff244f 0%, #f6c85f 52%, #bca6ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.theme-anime-dark .theme-picker,
+.theme-anime-dark .tab-bar,
+.theme-anime-dark .input-container,
+.theme-anime-dark .spend-top-actions {
+  position: relative;
+}
+
+.theme-anime-dark .theme-picker,
+.theme-anime-dark .tab-bar,
+.theme-anime-dark .summary-card,
+.theme-anime-dark .spend-panel,
+.theme-anime-dark .spend-input-form,
+.theme-anime-dark .spend-filter-panel,
+.theme-anime-dark .spend-day-panel,
+.theme-anime-dark .undo-banner,
+.theme-anime-dark .date-group,
+.theme-anime-dark .filter-banner,
+.theme-anime-dark .calendar-widget {
+  background:
+    linear-gradient(135deg, rgba(255, 36, 79, 0.07), transparent 34%),
+    linear-gradient(315deg, rgba(124, 60, 255, 0.09), transparent 42%),
+    var(--anime-panel);
+  border-color: rgba(255, 54, 98, 0.28);
+}
+
+.theme-anime-dark .summary-card,
+.theme-anime-dark .spend-panel,
+.theme-anime-dark .spend-input-form,
+.theme-anime-dark .spend-filter-panel,
+.theme-anime-dark .spend-day-panel,
+.theme-anime-dark .date-group {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(246, 200, 95, 0.08);
+}
+
+.theme-anime-dark .spend-section-kicker,
+.theme-anime-dark .summary-label,
+.theme-anime-dark .spend-label,
+.theme-anime-dark .date-header {
+  color: rgba(246, 200, 95, 0.72);
+}
+
+.theme-anime-dark .tab-btn {
+  color: rgba(245, 241, 255, 0.72);
+  border: 1px solid transparent;
+}
+
+.theme-anime-dark .tab-btn:hover {
+  color: #f5f1ff;
+  background: rgba(255, 36, 79, 0.1);
+  border-color: rgba(255, 36, 79, 0.28);
+}
+
+.theme-anime-dark .tab-btn--active {
+  color: #fff8ea;
+  background:
+    linear-gradient(135deg, rgba(255, 36, 79, 0.86), rgba(124, 60, 255, 0.68));
+  border-color: rgba(246, 200, 95, 0.5);
+  box-shadow: 0 0 0 1px rgba(246, 200, 95, 0.2), 0 0 18px rgba(255, 36, 79, 0.2);
+}
+
+.theme-anime-dark .spend-submit-btn,
+.theme-anime-dark .date-toggle-btn.active,
+.theme-anime-dark .sync-now-btn,
+.theme-anime-dark .tab-btn--active {
+  background:
+    linear-gradient(135deg, #ff244f 0%, #a92cff 58%, #f6c85f 140%);
+}
+
+.theme-anime-dark .spend-submit-btn,
+.theme-anime-dark .date-toggle-btn.active,
+.theme-anime-dark .sync-now-btn {
+  color: #fff8ea;
+  border: 1px solid rgba(246, 200, 95, 0.38);
+}
+
+.theme-anime-dark .secondary-action-btn,
+.theme-anime-dark .undo-banner button,
+.theme-anime-dark .spend-item-actions button,
+.theme-anime-dark .recurring-payment-actions button,
+.theme-anime-dark .clear-filter-btn,
+.theme-anime-dark .logout-btn,
+.theme-anime-dark .cal-today-btn,
+.theme-anime-dark .cal-view-btn,
+.theme-anime-dark .cal-nav-btn {
+  background:
+    linear-gradient(135deg, rgba(255, 36, 79, 0.08), rgba(124, 60, 255, 0.08)),
+    rgba(12, 10, 19, 0.82);
+  border-color: rgba(255, 54, 98, 0.28);
+  color: #f5f1ff;
+}
+
+.theme-anime-dark .spend-submit-btn:hover,
+.theme-anime-dark .secondary-action-btn:hover,
+.theme-anime-dark .undo-banner button:hover,
+.theme-anime-dark .spend-item-actions button:hover,
+.theme-anime-dark .recurring-payment-actions button:hover,
+.theme-anime-dark .clear-filter-btn:hover,
+.theme-anime-dark .cal-today-btn:hover,
+.theme-anime-dark .cal-view-btn:hover,
+.theme-anime-dark .cal-nav-btn:hover {
+  border-color: rgba(246, 200, 95, 0.56);
+  background:
+    linear-gradient(135deg, rgba(255, 36, 79, 0.18), rgba(124, 60, 255, 0.16)),
+    rgba(20, 14, 28, 0.96);
+  box-shadow: 0 0 14px rgba(255, 36, 79, 0.16);
+}
+
+.theme-anime-dark .spend-field input,
+.theme-anime-dark .spend-field select,
+.theme-anime-dark .spend-select,
+.theme-anime-dark .spend-datepicker-input,
+.theme-anime-dark .log-input {
+  background:
+    linear-gradient(135deg, rgba(124, 60, 255, 0.06), rgba(255, 36, 79, 0.04)),
+    rgba(8, 7, 13, 0.9);
+  border-color: rgba(255, 54, 98, 0.25);
+  color: #f5f1ff;
+}
+
+.theme-anime-dark .spend-field input:focus,
+.theme-anime-dark .spend-field select:focus,
+.theme-anime-dark .spend-select:focus,
+.theme-anime-dark .spend-datepicker-input:focus,
+.theme-anime-dark .log-input:focus {
+  border-color: #ff244f;
+  background-color: rgba(20, 14, 28, 0.98);
+  box-shadow: 0 0 0 3px rgba(255, 36, 79, 0.18);
+}
+
+.theme-anime-dark .help-button {
+  background: rgba(8, 7, 13, 0.86);
+  border-color: rgba(246, 200, 95, 0.34);
+  color: #f6c85f;
+}
+
+.theme-anime-dark .help-popover,
+.theme-anime-dark .spend-settings-panel,
+.theme-anime-dark .spend-item-edit,
+.theme-anime-dark .recurring-payment-form {
+  background:
+    linear-gradient(135deg, rgba(255, 36, 79, 0.08), rgba(124, 60, 255, 0.1)),
+    var(--anime-panel-strong);
+  border-color: rgba(246, 200, 95, 0.24);
+}
+
+.theme-anime-dark .category-chip {
+  color: #150911;
+  background: linear-gradient(135deg, #f6c85f, #ff9f5f);
+}
+
+.theme-anime-dark .recurring-chip,
+.theme-anime-dark .reminder-chip,
+.theme-anime-dark .due-status-chip--soon {
+  color: #09070d;
+  background: linear-gradient(135deg, #5ff2a5, #5de7ff);
+}
+
+.theme-anime-dark .tag-chip,
+.theme-anime-dark .due-status-chip {
+  background: rgba(124, 60, 255, 0.14);
+  border-color: rgba(124, 60, 255, 0.32);
+}
+
+.theme-anime-dark .spend-item {
+  border: 1px solid rgba(255, 54, 98, 0.1);
+}
+
+.theme-anime-dark .spend-item:hover {
+  background: rgba(255, 36, 79, 0.06);
+  border-color: rgba(255, 54, 98, 0.2);
+}
+
+.theme-anime-dark .budget-progress span,
+.theme-anime-dark .category-bar span {
+  background: linear-gradient(90deg, #ff244f, #7c3cff, #f6c85f);
+}
+
+.theme-anime-dark .no-spend-day.is-no-spend {
+  border-color: rgba(93, 231, 255, 0.5);
+  background: rgba(93, 231, 255, 0.08);
+}
+
+.theme-anime-dark .no-spend-day.has-spending {
+  border-color: rgba(255, 36, 79, 0.42);
+  background: rgba(255, 36, 79, 0.08);
+}
+
+.theme-anime-dark .no-spend-day.is-today {
+  outline-color: #f6c85f;
+}
+
+.theme-anime-dark .theme-swatch--active {
+  border-color: #f6c85f;
+}
+
+.theme-intensity-low.theme-anime-dark .summary-card,
+.theme-intensity-low.theme-anime-dark .spend-panel,
+.theme-intensity-low.theme-anime-dark .spend-input-form,
+.theme-intensity-low.theme-anime-dark .spend-filter-panel,
+.theme-intensity-low.theme-anime-dark .spend-day-panel,
+.theme-intensity-low.theme-anime-dark .date-group {
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.32);
+}
+
+.theme-intensity-high.theme-anime-dark .summary-card,
+.theme-intensity-high.theme-anime-dark .spend-panel,
+.theme-intensity-high.theme-anime-dark .spend-input-form,
+.theme-intensity-high.theme-anime-dark .spend-filter-panel,
+.theme-intensity-high.theme-anime-dark .spend-day-panel,
+.theme-intensity-high.theme-anime-dark .date-group {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(246, 200, 95, 0.12);
+}
+
+.performance-mode.theme-anime-dark .summary-card,
+.performance-mode.theme-anime-dark .spend-panel,
+.performance-mode.theme-anime-dark .spend-input-form,
+.performance-mode.theme-anime-dark .spend-filter-panel,
+.performance-mode.theme-anime-dark .spend-day-panel,
+.performance-mode.theme-anime-dark .date-group {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+
+.performance-mode.theme-anime-dark .spend-submit-btn:hover,
+.performance-mode.theme-anime-dark .secondary-action-btn:hover,
+.performance-mode.theme-anime-dark .spend-item-actions button:hover,
+.performance-mode.theme-anime-dark .recurring-payment-actions button:hover {
+  box-shadow: none;
+}
+
+@media (max-width: 640px) {
+  .theme-anime-dark .summary-card,
+  .theme-anime-dark .spend-panel,
+  .theme-anime-dark .spend-input-form,
+  .theme-anime-dark .spend-filter-panel,
+  .theme-anime-dark .spend-day-panel,
+  .theme-anime-dark .date-group {
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.34);
+  }
+}
